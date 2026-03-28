@@ -45,24 +45,37 @@ Objetivo principal: fornecer uma plataforma simples que permita **upload, proces
 
 ## 4. Estrutura de Dados
 
-### 4.1 Contratante
+### 4.1 Usuário
+
+| Campo  | Tipo   | Descrição                                |
+| ------ | ------ | ---------------------------------------- |
+| ID     | Int    | **Chave primária** - Identificador único |
+| Nome   | String | Nome do usuário                          |
+| E-mail | String | Email de login/autenticação              |
+| Senha  | String | Hash da senha                            |
+
+### 4.2 Contratante
 
 | Campo    | Tipo   | Descrição                                |
 | -------- | ------ | ---------------------------------------- |
+| ID       | Int    | **Chave primária** - Identificador único |
+| User_ID  | FK     | Referência ao usuário dono do registro   |
 | Nome     | String | Nome do contratante                      |
-| CPF/CNPJ | String | **Chave primária** - Identificador único |
+| CPF/CNPJ | String | Identificador único do contratante       |
 | E-mail   | String | Email de contato                         |
 | Telefone | String | Telefone de contato                      |
 
-### 4.2 Lançamento
+### 4.3 Lançamento
 
-| Campo                      | Tipo     | Descrição                            |
-| -------------------------- | -------- | ------------------------------------ |
-| Receita Bruta              | Numérico | Valor extraído do XML da nota fiscal |
-| Data de Lançamento         | Data     | Preenchida automaticamente           |
-| CNPJ do Contratante        | String   | Extraído do XML da nota fiscal       |
-| Valor dos Impostos         | JSON     | Objeto com impostos principais       |
-| Faturamento do Contratante | Numérico | Definido manualmente pelo usuário    |
+| Campo                      | Tipo     | Descrição                                |
+| -------------------------- | -------- | ---------------------------------------- |
+| ID                         | Int      | **Chave primária** - Identificador único |
+| User_ID                    | FK       | Referência ao usuário dono do registro   |
+| Contratante_ID             | FK       | Referência ao contratante vinculado      |
+| Receita Bruta              | Numérico | Valor extraído do XML da nota fiscal     |
+| Data de Lançamento         | Data     | Preenchida automaticamente               |
+| Valor dos Impostos         | JSON     | Objeto com impostos principais           |
+| Faturamento do Contratante | Numérico | Definido manualmente pelo usuário        |
 
 ---
 

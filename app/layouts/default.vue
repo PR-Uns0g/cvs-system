@@ -1,5 +1,9 @@
 <template>
   <div class="app-shell">
-    <slot />
+    <AppSidebar />
+
+    <main class="app-shell__main">
+      <slot />
+    </main>
   </div>
 </template>
