@@ -1,11 +1,38 @@
 <script setup lang="ts">
 definePageMeta({
-  layout: 'auth',
-})
+  layout: "auth",
+});
 
 useHead({
-  title: 'Login | CVS System',
-})
+  title: "Login | CVS System",
+});
+
+const route = useRoute();
+const { login } = useAuth();
+
+const credentials = reactive({
+  email: "",
+  password: "",
+});
+const isSubmitting = ref(false);
+const errorMessage = ref("");
+
+const submitLogin = async () => {
+  errorMessage.value = "";
+  isSubmitting.value = true;
+
+  try {
+    await login(credentials);
+    await navigateTo(String(route.query.redirect || "/"));
+  } catch (error: unknown) {
+    errorMessage.value =
+      error && typeof error === "object" && "statusMessage" in error
+        ? String(error.statusMessage)
+        : "Não foi possível autenticar com essas credenciais.";
+  } finally {
+    isSubmitting.value = false;
+  }
+};
 </script>
 
 <template>
@@ -21,22 +48,43 @@ useHead({
 
       <div class="login-card__header">
         <h1>Entrar</h1>
-        <p>Fluxo-base de autenticação previsto no PRD, com foco em leitura simples e ação direta.</p>
+        <p>Acesse com seu e-mail e senha para consultar faturamento, contratantes e relatórios.</p>
       </div>
 
-      <form class="login-form">
+      <form class="login-form" @submit.prevent="submitLogin">
         <label class="mock-field">
           <span>E-mail</span>
-          <input class="mock-input" type="email" placeholder="voce@empresa.com.br" />
+          <input
+            v-model.trim="credentials.email"
+            class="mock-input"
+            type="email"
+            autocomplete="email"
+            placeholder="você@empresa.com.br"
+            required
+          />
         </label>
         <label class="mock-field">
           <span>Senha</span>
-          <input class="mock-input" type="password" placeholder="Digite sua senha" />
+          <input
+            v-model="credentials.password"
+            class="mock-input"
+            type="password"
+            autocomplete="current-password"
+            placeholder="Digite sua senha"
+            required
+          />
         </label>
-        <NuxtLink to="/" class="page-shell__cta login-form__submit">
+        <p v-if="errorMessage" class="form-feedback form-feedback--danger">
+          {{ errorMessage }}
+        </p>
+        <button
+          type="submit"
+          class="page-shell__cta login-form__submit"
+          :disabled="isSubmitting"
+        >
           <i class="pi pi-sign-in" />
-          <span>Entrar no sistema</span>
-        </NuxtLink>
+          <span>{{ isSubmitting ? "Entrando..." : "Entrar no sistema" }}</span>
+        </button>
       </form>
     </div>
   </section>

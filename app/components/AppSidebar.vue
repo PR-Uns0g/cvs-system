@@ -2,10 +2,8 @@
 import packageJson from "../../package.json";
 
 const route = useRoute();
+const { user, logout } = useAuth();
 const isMenuOpen = ref(false);
-const user = useState("session-user", () => ({
-  name: "Representante Demo",
-}));
 
 const navigationItems = [
   {
@@ -38,6 +36,11 @@ const appVersion = packageJson.version ?? "0.1.0";
 
 const closeMenu = () => {
   isMenuOpen.value = false;
+};
+
+const handleLogout = async () => {
+  closeMenu();
+  await logout();
 };
 
 const isActiveRoute = (to: string) => {
@@ -98,7 +101,7 @@ const isActiveRoute = (to: string) => {
           </span>
 
           <span class="app-user-trigger__copy">
-            <strong>{{ user.name }}</strong>
+            <strong>{{ user?.name || user?.email || "Usuário" }}</strong>
           </span>
 
           <i class="pi pi-chevron-up app-user-trigger__chevron" />
@@ -107,14 +110,14 @@ const isActiveRoute = (to: string) => {
         <div class="app-user-menu__popover">
           <p class="app-user-menu__eyebrow">Sessão</p>
 
-          <NuxtLink
-            to="/login"
+          <button
+            type="button"
             class="app-user-menu__action"
-            @click="closeMenu"
+            @click="handleLogout"
           >
             <i class="pi pi-sign-out" />
             <span>Logout</span>
-          </NuxtLink>
+          </button>
         </div>
       </details>
     </div>
@@ -342,7 +345,10 @@ const isActiveRoute = (to: string) => {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  width: 100%;
+  border: 0;
   border-radius: 1rem;
+  background: transparent;
   padding: 0.85rem 0.9rem;
   color: var(--color-text);
   transition: background-color 0.2s ease;

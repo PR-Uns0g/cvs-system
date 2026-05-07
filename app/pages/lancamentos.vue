@@ -1,250 +1,54 @@
 <script setup lang="ts">
-type TaxDetail = {
-  name: string;
-  rate: string;
-  value: string;
-};
-
-type LaunchEntry = {
-  id: number;
-  date: string;
-  contractor: string;
-  contractorRevenue: string;
-  taxesTotal: string;
-  myRevenue: string;
-  status: string;
-  statusTone: "success" | "warn" | "danger" | "neutral";
-  xmlLabel: string;
-  taxes: TaxDetail[];
-};
+import type { Contractor, LaunchEntry, TaxDetail } from "~/types/api";
 
 useHead({
   title: "Lançamentos | CVS System",
 });
 
-const contractorOptions = [
-  "Nova Era Distribuidora",
-  "Comercial Horizonte",
-  "Atacado São Jorge",
-  "Central Alimentos",
-  "Mercantil do Vale",
-];
+const {
+  data: launchesPayload,
+  pending,
+  refresh,
+} = await useFetch("/api/lancamentos", {
+  key: "launches",
+});
+const { data: contractorsPayload } = await useFetch("/api/contratantes", {
+  key: "launch-contractors",
+});
 
-const entries = ref<LaunchEntry[]>([
-  {
-    id: 1,
-    date: "28 mar 2026",
-    contractor: "Nova Era Distribuidora",
-    contractorRevenue: "R$ 148.000",
-    taxesTotal: "R$ 18.640",
-    myRevenue: "R$ 7.400",
-    status: "Processado",
-    statusTone: "success",
-    xmlLabel: "NFE-28490.xml",
-    taxes: [
-      { name: "ICMS", rate: "12%", value: "R$ 17.760" },
-      { name: "PIS", rate: "0,5%", value: "R$ 740" },
-      { name: "COFINS", rate: "0,1%", value: "R$ 140" },
-    ],
-  },
-  {
-    id: 2,
-    date: "27 mar 2026",
-    contractor: "Comercial Horizonte",
-    contractorRevenue: "R$ 82.000",
-    taxesTotal: "R$ 10.004",
-    myRevenue: "R$ 4.100",
-    status: "Pendente",
-    statusTone: "warn",
-    xmlLabel: "NFE-77102.xml",
-    taxes: [
-      { name: "ICMS", rate: "11%", value: "R$ 9.020" },
-      { name: "PIS", rate: "0,8%", value: "R$ 656" },
-      { name: "COFINS", rate: "0,4%", value: "R$ 328" },
-    ],
-  },
-  {
-    id: 3,
-    date: "26 mar 2026",
-    contractor: "Atacado São Jorge",
-    contractorRevenue: "R$ 124.500",
-    taxesTotal: "R$ 15.455",
-    myRevenue: "R$ 6.225",
-    status: "Processado",
-    statusTone: "success",
-    xmlLabel: "NFE-66234.xml",
-    taxes: [
-      { name: "ICMS", rate: "11,5%", value: "R$ 14.317" },
-      { name: "PIS", rate: "0,7%", value: "R$ 872" },
-      { name: "COFINS", rate: "0,2%", value: "R$ 266" },
-    ],
-  },
-  {
-    id: 4,
-    date: "25 mar 2026",
-    contractor: "Central Alimentos",
-    contractorRevenue: "R$ 96.800",
-    taxesTotal: "R$ 11.712",
-    myRevenue: "R$ 4.840",
-    status: "Falha",
-    statusTone: "danger",
-    xmlLabel: "NFE-77412.xml",
-    taxes: [
-      { name: "ICMS", rate: "10,8%", value: "R$ 10.454" },
-      { name: "PIS", rate: "0,9%", value: "R$ 871" },
-      { name: "COFINS", rate: "0,4%", value: "R$ 387" },
-    ],
-  },
-  {
-    id: 5,
-    date: "24 mar 2026",
-    contractor: "Mercantil do Vale",
-    contractorRevenue: "R$ 110.000",
-    taxesTotal: "R$ 13.200",
-    myRevenue: "R$ 5.500",
-    status: "Processado",
-    statusTone: "success",
-    xmlLabel: "NFE-44921.xml",
-    taxes: [
-      { name: "ICMS", rate: "11%", value: "R$ 12.100" },
-      { name: "PIS", rate: "0,7%", value: "R$ 770" },
-      { name: "COFINS", rate: "0,3%", value: "R$ 330" },
-    ],
-  },
-  {
-    id: 6,
-    date: "23 mar 2026",
-    contractor: "Nova Era Distribuidora",
-    contractorRevenue: "R$ 132.600",
-    taxesTotal: "R$ 16.177",
-    myRevenue: "R$ 6.630",
-    status: "Pendente",
-    statusTone: "warn",
-    xmlLabel: "NFE-55218.xml",
-    taxes: [
-      { name: "ICMS", rate: "11,4%", value: "R$ 15.116" },
-      { name: "PIS", rate: "0,6%", value: "R$ 796" },
-      { name: "COFINS", rate: "0,2%", value: "R$ 265" },
-    ],
-  },
-  {
-    id: 7,
-    date: "22 mar 2026",
-    contractor: "Comercial Horizonte",
-    contractorRevenue: "R$ 74.900",
-    taxesTotal: "R$ 8.988",
-    myRevenue: "R$ 3.745",
-    status: "Processado",
-    statusTone: "success",
-    xmlLabel: "NFE-22280.xml",
-    taxes: [
-      { name: "ICMS", rate: "10,9%", value: "R$ 8.164" },
-      { name: "PIS", rate: "0,7%", value: "R$ 524" },
-      { name: "COFINS", rate: "0,4%", value: "R$ 300" },
-    ],
-  },
-  {
-    id: 8,
-    date: "21 mar 2026",
-    contractor: "Atacado São Jorge",
-    contractorRevenue: "R$ 141.000",
-    taxesTotal: "R$ 17.907",
-    myRevenue: "R$ 7.050",
-    status: "Falha",
-    statusTone: "danger",
-    xmlLabel: "NFE-98120.xml",
-    taxes: [
-      { name: "ICMS", rate: "12%", value: "R$ 16.920" },
-      { name: "PIS", rate: "0,5%", value: "R$ 705" },
-      { name: "COFINS", rate: "0,2%", value: "R$ 282" },
-    ],
-  },
-  {
-    id: 9,
-    date: "20 mar 2026",
-    contractor: "Central Alimentos",
-    contractorRevenue: "R$ 89.300",
-    taxesTotal: "R$ 10.806",
-    myRevenue: "R$ 4.465",
-    status: "Processado",
-    statusTone: "success",
-    xmlLabel: "NFE-11002.xml",
-    taxes: [
-      { name: "ICMS", rate: "11%", value: "R$ 9.823" },
-      { name: "PIS", rate: "0,7%", value: "R$ 625" },
-      { name: "COFINS", rate: "0,4%", value: "R$ 358" },
-    ],
-  },
-  {
-    id: 10,
-    date: "19 mar 2026",
-    contractor: "Mercantil do Vale",
-    contractorRevenue: "R$ 101.400",
-    taxesTotal: "R$ 12.067",
-    myRevenue: "R$ 5.070",
-    status: "Pendente",
-    statusTone: "warn",
-    xmlLabel: "NFE-44531.xml",
-    taxes: [
-      { name: "ICMS", rate: "10,8%", value: "R$ 10.951" },
-      { name: "PIS", rate: "0,7%", value: "R$ 710" },
-      { name: "COFINS", rate: "0,4%", value: "R$ 406" },
-    ],
-  },
-  {
-    id: 11,
-    date: "18 mar 2026",
-    contractor: "Nova Era Distribuidora",
-    contractorRevenue: "R$ 158.400",
-    taxesTotal: "R$ 19.215",
-    myRevenue: "R$ 7.920",
-    status: "Processado",
-    statusTone: "success",
-    xmlLabel: "NFE-33918.xml",
-    taxes: [
-      { name: "ICMS", rate: "11,6%", value: "R$ 18.374" },
-      { name: "PIS", rate: "0,4%", value: "R$ 634" },
-      { name: "COFINS", rate: "0,1%", value: "R$ 207" },
-    ],
-  },
-  {
-    id: 12,
-    date: "17 mar 2026",
-    contractor: "Comercial Horizonte",
-    contractorRevenue: "R$ 93.500",
-    taxesTotal: "R$ 11.407",
-    myRevenue: "R$ 4.675",
-    status: "Processado",
-    statusTone: "success",
-    xmlLabel: "NFE-51001.xml",
-    taxes: [
-      { name: "ICMS", rate: "11%", value: "R$ 10.285" },
-      { name: "PIS", rate: "0,8%", value: "R$ 748" },
-      { name: "COFINS", rate: "0,4%", value: "R$ 374" },
-    ],
-  },
-]);
+const contractorNameById = computed(() =>
+  Object.fromEntries(
+    contractors.value.map((c) => [String(c.id), c.legalName] as const),
+  ),
+);
+
+const entries = computed<LaunchEntry[]>(() =>
+  asArray(launchesPayload.value).map((item) =>
+    normalizeLaunch(item, contractorNameById.value),
+  ),
+);
+const contractors = computed<Contractor[]>(() =>
+  asArray(contractorsPayload.value).map(normalizeContractor),
+);
 
 const showCreateForm = ref(false);
-const manualContractorSelection = ref(false);
-const createFileName = ref("Selecione o XML da nota");
+const selectedFile = ref<File | null>(null);
+const isUploading = ref(false);
+const feedback = ref<{ tone: "success" | "danger"; message: string } | null>(
+  null,
+);
 const createForm = reactive({
-  selectedContractor: contractorOptions[0] || "",
   contractorRevenue: "",
 });
 
 const search = ref("");
 const currentPage = ref(1);
 const pageSize = 10;
-const expandedTaxesId = ref<number | null>(null);
-const editingEntryId = ref<number | null>(null);
-const deletingEntryId = ref<number | null>(null);
-const editFileName = ref("Nenhum XML selecionado");
-const editForm = reactive({
-  contractor: contractorOptions[0] || "",
-  contractorRevenue: "",
-  myRevenue: "",
-});
+const expandedTaxesId = ref<string | number | null>(null);
+
+const fileName = computed(
+  () => selectedFile.value?.name || "Selecione o XML da nota",
+);
 
 const filteredEntries = computed(() => {
   const term = search.value.trim().toLowerCase();
@@ -261,6 +65,10 @@ const filteredEntries = computed(() => {
   );
 });
 
+const isSearchEmpty = computed(
+  () => entries.value.length > 0 && filteredEntries.value.length === 0,
+);
+
 const totalPages = computed(() =>
   Math.max(1, Math.ceil(filteredEntries.value.length / pageSize)),
 );
@@ -270,9 +78,14 @@ const paginatedEntries = computed(() => {
   return filteredEntries.value.slice(start, start + pageSize);
 });
 
-const activeEditingEntry = computed(
-  () =>
-    entries.value.find((entry) => entry.id === editingEntryId.value) ?? null,
+const statusCounts = computed(() =>
+  entries.value.reduce(
+    (totals, entry) => {
+      totals[entry.statusTone] += 1;
+      return totals;
+    },
+    { success: 0, warn: 0, danger: 0, neutral: 0 },
+  ),
 );
 
 watch(search, () => {
@@ -285,94 +98,70 @@ watch(filteredEntries, () => {
   }
 });
 
-const closeInlinePanels = () => {
-  expandedTaxesId.value = null;
-  editingEntryId.value = null;
-  deletingEntryId.value = null;
-};
-
 const toggleCreateForm = () => {
   showCreateForm.value = !showCreateForm.value;
+  feedback.value = null;
 };
 
 const handleCreateFileChange = (event: Event) => {
   const input = event.target as HTMLInputElement;
-  createFileName.value = input.files?.[0]?.name || "Selecione o XML da nota";
+  selectedFile.value = input.files?.[0] || null;
 };
 
-const saveCreateEntry = () => {
-  entries.value.unshift({
-    id: Date.now(),
-    date: "Hoje",
-    contractor: manualContractorSelection.value
-      ? createForm.selectedContractor
-      : "Reconhecimento automático",
-    contractorRevenue: createForm.contractorRevenue || "R$ 0",
-    taxesTotal: "R$ 0",
-    myRevenue: "R$ 0",
-    status: "Pendente",
-    statusTone: "warn",
-    xmlLabel: createFileName.value,
-    taxes: [],
-  });
-
-  createForm.contractorRevenue = "";
-  createFileName.value = "Selecione o XML da nota";
-  manualContractorSelection.value = false;
-  showCreateForm.value = false;
-  currentPage.value = 1;
-};
-
-const toggleTaxes = (entryId: number) => {
-  expandedTaxesId.value = expandedTaxesId.value === entryId ? null : entryId;
-  editingEntryId.value = null;
-  deletingEntryId.value = null;
-};
-
-const startEdit = (entry: LaunchEntry) => {
-  editingEntryId.value = entry.id;
-  expandedTaxesId.value = null;
-  deletingEntryId.value = null;
-  editForm.contractor = entry.contractor;
-  editForm.contractorRevenue = entry.contractorRevenue;
-  editForm.myRevenue = entry.myRevenue;
-  editFileName.value = entry.xmlLabel;
-};
-
-const cancelEdit = () => {
-  editingEntryId.value = null;
-};
-
-const handleEditFileChange = (event: Event) => {
-  const input = event.target as HTMLInputElement;
-  editFileName.value = input.files?.[0]?.name || editFileName.value;
-};
-
-const saveEdit = () => {
-  if (!activeEditingEntry.value) {
+const saveCreateEntry = async () => {
+  if (!selectedFile.value) {
+    feedback.value = {
+      tone: "danger",
+      message: "Selecione um arquivo XML antes de enviar.",
+    };
     return;
   }
 
-  activeEditingEntry.value.contractor = editForm.contractor;
-  activeEditingEntry.value.contractorRevenue = editForm.contractorRevenue;
-  activeEditingEntry.value.myRevenue = editForm.myRevenue;
-  activeEditingEntry.value.xmlLabel = editFileName.value;
-  editingEntryId.value = null;
-};
-
-const askDeleteEntry = (entryId: number) => {
-  deletingEntryId.value = deletingEntryId.value === entryId ? null : entryId;
-  expandedTaxesId.value = null;
-  editingEntryId.value = null;
-};
-
-const confirmDeleteEntry = (entryId: number) => {
-  entries.value = entries.value.filter((entry) => entry.id !== entryId);
-  deletingEntryId.value = null;
-
-  if (currentPage.value > totalPages.value) {
-    currentPage.value = totalPages.value;
+  const revenue = createForm.contractorRevenue.trim();
+  if (!revenue) {
+    feedback.value = {
+      tone: "danger",
+      message: "Informe o faturamento do contratante (campo exigido pela API).",
+    };
+    return;
   }
+
+  feedback.value = null;
+  isUploading.value = true;
+
+  try {
+    const formData = new FormData();
+    formData.append("arquivo", selectedFile.value);
+    formData.append("faturamento_contratante", revenue);
+
+    await $fetch("/api/lancamentos/importar-xml", {
+      method: "POST",
+      body: formData,
+    });
+
+    selectedFile.value = null;
+    createForm.contractorRevenue = "";
+    showCreateForm.value = false;
+    feedback.value = {
+      tone: "success",
+      message: "XML enviado para processamento.",
+    };
+    await refresh();
+  } catch (error: unknown) {
+    feedback.value = {
+      tone: "danger",
+      message:
+        error && typeof error === "object" && "statusMessage" in error
+          ? String(error.statusMessage)
+          : "Não foi possível importar o XML.",
+    };
+  } finally {
+    isUploading.value = false;
+  }
+};
+
+const toggleTaxes = (entryId: string | number) => {
+  expandedTaxesId.value = expandedTaxesId.value === entryId ? null : entryId;
 };
 
 const previousPage = () => {
@@ -382,18 +171,42 @@ const previousPage = () => {
 const nextPage = () => {
   currentPage.value = Math.min(totalPages.value, currentPage.value + 1);
 };
+
+const percentFormatter = new Intl.NumberFormat("pt-BR", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+/** Alíquota total: soma dos impostos sobre o valor da NF (%). */
+const formatAliquotaTotalSobreNf = (entry: LaunchEntry) => {
+  if (entry.myRevenueNumber <= 0) {
+    return "—";
+  }
+  return `${percentFormatter.format((entry.taxesTotalNumber / entry.myRevenueNumber) * 100)}%`;
+};
+
+/** Alíquota do tributo sobre o valor da NF (%). */
+const formatAliquotaSobreNf = (tax: TaxDetail, nf: number) => {
+  if (nf <= 0) {
+    return "—";
+  }
+  return `${percentFormatter.format((tax.valueNumber / nf) * 100)}%`;
+};
 </script>
 
 <template>
   <AppPageShell
     eyebrow="Operação"
     title="Lançamentos"
-    subtitle="Cadastre notas com clareza, acompanhe o processamento e mantenha os detalhes de impostos e edição sempre ao alcance."
+    subtitle="Importe XMLs e acompanhe os lançamentos retornados pela API autenticada."
   >
     <template #actions>
       <button
         type="button"
-        :class="['page-shell__cta', { 'page-shell__cta--danger': showCreateForm }]"
+        :class="[
+          'page-shell__cta',
+          { 'page-shell__cta--danger': showCreateForm },
+        ]"
         @click="toggleCreateForm"
       >
         <i :class="showCreateForm ? 'pi pi-times' : 'pi pi-upload'" />
@@ -401,103 +214,105 @@ const nextPage = () => {
       </button>
     </template>
 
+    <p
+      v-if="feedback"
+      :class="[
+        'form-feedback',
+        feedback.tone === 'success'
+          ? 'form-feedback--success'
+          : 'form-feedback--danger',
+      ]"
+    >
+      {{ feedback.message }}
+    </p>
+
     <Transition name="expand-fade">
-      <section v-if="showCreateForm" class="panel-card launch-form-card">
+      <form
+        v-if="showCreateForm"
+        class="panel-card launch-form-card"
+        @submit.prevent="saveCreateEntry"
+      >
         <div class="section-header">
           <div>
             <p class="section-header__eyebrow">Novo lançamento</p>
-            <h2>Cadastro da nota</h2>
+            <h2>Importação da nota</h2>
           </div>
         </div>
 
-        <label class="switch-field">
-          <span class="switch-field__copy">
-            <strong>Não deixar preenchimento automático de contratante</strong>
-            <small>
-              Ative quando preferir escolher manualmente uma razão social já cadastrada.
-            </small>
-          </span>
-
-          <span class="switch-field__control">
-            <input v-model="manualContractorSelection" type="checkbox" />
-            <span class="switch-field__track" />
-          </span>
-        </label>
+        <p class="launch-form-hint">
+          O contratante é identificado a partir do XML da nota. Informe o
+          faturamento declarado (campo faturamento_contratante na API).
+        </p>
 
         <div class="launch-form-layout">
           <label class="upload-dropzone upload-dropzone--input">
-            <input type="file" accept=".xml" hidden @change="handleCreateFileChange" />
+            <input
+              type="file"
+              accept=".xml"
+              hidden
+              @change="handleCreateFileChange"
+            />
             <i class="pi pi-file-arrow-up" />
-            <strong>{{ createFileName }}</strong>
-            <p>
-              Clique para selecionar o XML da nota. O sistema usará o arquivo para preencher os dados base.
-            </p>
+            <strong>{{ fileName }}</strong>
+            <p>Clique para selecionar o XML da nota e enviar para a API.</p>
           </label>
 
           <div class="launch-form-side">
-            <label v-if="manualContractorSelection" class="mock-field">
-              <span>Razão social</span>
-              <select v-model="createForm.selectedContractor" class="mock-input">
-                <option
-                  v-for="contractor in contractorOptions"
-                  :key="contractor"
-                  :value="contractor"
-                >
-                  {{ contractor }}
-                </option>
-              </select>
-            </label>
-
             <label class="mock-field">
-              <span>Receita da Contratante</span>
+              <span>Faturamento do contratante</span>
               <input
                 v-model="createForm.contractorRevenue"
                 class="mock-input"
-                placeholder="Ex.: R$ 148.000,00"
+                placeholder="Ex.: 148000.00"
+                required
               />
             </label>
           </div>
         </div>
 
         <div class="form-actions">
-          <button type="button" class="page-shell__cta" @click="saveCreateEntry">
+          <button type="submit" class="page-shell__cta" :disabled="isUploading">
             <i class="pi pi-check" />
-            <span>Salvar lançamento</span>
+            <span>{{ isUploading ? "Enviando..." : "Salvar lançamento" }}</span>
           </button>
         </div>
-      </section>
+      </form>
     </Transition>
 
-    <section class="panel-card filter-strip">
-      <div class="filter-strip__item">
-        <span>Período</span>
-        <strong>Março de 2026</strong>
-      </div>
-
-      <div class="filter-strip__item">
-        <span>Contratante</span>
-        <strong>Todos</strong>
+    <section
+      v-if="!pending && !entries.length"
+      class="panel-card launch-empty-hero"
+    >
+      <div class="empty-state empty-state--stacked">
+        <i class="pi pi-receipt" />
+        <div>
+          <strong>Nenhum lançamento na sua conta ainda.</strong>
+          <p>
+            Os totais abaixo só passam a refletir notas reais depois da primeira
+            importação. Use Enviar XML para registrar o primeiro lançamento.
+          </p>
+        </div>
       </div>
     </section>
 
-    <section class="panel-grid panel-grid--stats launch-stats">
+    <section v-else class="panel-grid panel-grid--stats launch-stats">
       <AppStatCard
         label="Processados"
-        value="32"
+        :value="String(statusCounts.success)"
         detail="Notas já conferidas e prontas para consulta."
         icon="pi pi-check"
         tone="success"
       />
       <AppStatCard
         label="Pendentes"
-        value="7"
+        :value="String(statusCounts.warn)"
         detail="Registros aguardando complemento ou revisão."
         icon="pi pi-clock"
         tone="warn"
       />
       <AppStatCard
         label="Falhas"
-        value="3"
+        :value="String(statusCounts.danger)"
         detail="Arquivos que exigem correção antes de seguirem."
         icon="pi pi-exclamation-triangle"
         tone="danger"
@@ -519,205 +334,125 @@ const nextPage = () => {
             <input
               v-model="search"
               class="mock-input"
-              placeholder="Pesquise por razão social, status, data ou XML"
+              placeholder="Pesquise por contratante, status, data ou XML"
             />
           </label>
-          <span class="pill">{{ filteredEntries.length }} registros</span>
+          <span class="pill">{{
+            pending ? "Carregando" : `${filteredEntries.length} registros`
+          }}</span>
         </div>
       </div>
 
-      <div class="table-wrap">
+      <div v-if="pending" class="empty-state empty-state--panel">
+        <i class="pi pi-spin pi-spinner" />
+        <div>
+          <strong>Carregando lançamentos...</strong>
+        </div>
+      </div>
+
+      <div v-else-if="!filteredEntries.length" class="empty-state">
+        <i class="pi pi-receipt" />
+        <div>
+          <strong>{{
+            isSearchEmpty
+              ? "Nenhum resultado para a busca."
+              : "Nenhum lançamento encontrado."
+          }}</strong>
+          <p>
+            {{
+              isSearchEmpty
+                ? "Limpe o filtro ou tente outro termo."
+                : "Envie um XML para criar o primeiro lançamento."
+            }}
+          </p>
+        </div>
+      </div>
+
+      <div v-else class="table-wrap">
         <table class="app-data-table">
           <thead>
             <tr>
               <th>Data</th>
-              <th>Razão social</th>
+              <th>Contratante</th>
               <th>Meu Faturamento</th>
               <th>Total Impostos</th>
               <th>Status</th>
-              <th>Ações</th>
+              <th>Impostos</th>
             </tr>
           </thead>
           <tbody>
             <template v-for="entry in paginatedEntries" :key="entry.id">
               <tr>
                 <td>{{ entry.date }}</td>
-                <td>
-                  <div class="contractor-cell">
-                    <span>{{ entry.contractor }}</span>
-                    <span class="info-tooltip">
-                      <button
-                        type="button"
-                        class="info-tooltip__trigger"
-                        aria-label="Ver receita da contratante"
-                      >
-                        <i class="pi pi-info-circle" />
-                      </button>
-                      <span class="info-tooltip__panel">
-                        Receita da contratante neste lançamento: {{ entry.contractorRevenue }}
-                      </span>
-                    </span>
-                  </div>
-                </td>
+                <td>{{ entry.contractor }}</td>
                 <td>{{ entry.myRevenue }}</td>
+                <td>{{ entry.taxesTotal }}</td>
                 <td>
-                  <div class="tax-cell">
-                    <span>{{ entry.taxesTotal }}</span>
-                    <button
-                      type="button"
-                      class="table-action table-action--ghost"
-                      @click="toggleTaxes(entry.id)"
-                    >
-                      <i :class="expandedTaxesId === entry.id ? 'pi pi-eye-slash' : 'pi pi-eye'" />
-                      <span>Ver</span>
-                    </button>
-                  </div>
-                </td>
-                <td>
-                  <span :class="['status-pill', `status-pill--${entry.statusTone}`]">
+                  <span
+                    :class="['status-pill', `status-pill--${entry.statusTone}`]"
+                  >
                     {{ entry.status }}
                   </span>
                 </td>
                 <td>
-                  <div class="table-actions">
-                    <button
-                      type="button"
-                      class="table-action table-action--edit"
-                      @click="startEdit(entry)"
-                    >
-                      <i class="pi pi-pencil" />
-                      <span>Editar</span>
-                    </button>
-                    <button
-                      type="button"
-                      class="table-action table-action--danger"
-                      @click="askDeleteEntry(entry.id)"
-                    >
-                      <i class="pi pi-trash" />
-                      <span>Excluir</span>
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    class="table-action table-action--ghost"
+                    :disabled="!entry.taxes.length"
+                    @click="toggleTaxes(entry.id)"
+                  >
+                    <i
+                      :class="
+                        expandedTaxesId === entry.id
+                          ? 'pi pi-eye-slash'
+                          : 'pi pi-eye'
+                      "
+                    />
+                    <span>Ver</span>
+                  </button>
                 </td>
               </tr>
 
               <tr v-if="expandedTaxesId === entry.id">
                 <td colspan="6" class="details-row">
                   <div class="inline-panel">
-                    <div class="inline-panel__header">
-                      <div>
-                        <p class="section-header__eyebrow">Impostos</p>
-                        <h3>Composição do total de impostos</h3>
-                      </div>
+                    <div>
+                      <p class="section-header__eyebrow">Impostos</p>
+                      <h3>Composição do total de impostos</h3>
+                      <p class="tax-panel-summary">
+                        <span class="tax-panel-summary__label"
+                          >Alíquota total (sobre NF)</span
+                        >
+                        <span class="tax-panel-summary__value">{{
+                          formatAliquotaTotalSobreNf(entry)
+                        }}</span>
+                        <span class="tax-panel-summary__hint"
+                          >Percentual do total de impostos em relação ao valor da sua
+                          nota.</span
+                        >
+                      </p>
                     </div>
 
                     <div class="tax-grid">
-                      <article v-for="tax in entry.taxes" :key="tax.name" class="tax-card">
-                        <p>{{ tax.name }}</p>
-                        <strong>{{ tax.rate }}</strong>
-                        <small>{{ tax.value }}</small>
+                      <article
+                        v-for="tax in entry.taxes"
+                        :key="tax.name"
+                        class="tax-card"
+                      >
+                        <p class="tax-card__name">{{ tax.name }}</p>
+                        <strong class="tax-card__value">{{ tax.value }}</strong>
+                        <small
+                          v-if="tax.rate !== '-'"
+                          class="tax-card__declared"
+                          >Declarada: {{ tax.rate }}</small
+                        >
+                        <small class="tax-card__aliquota"
+                          >Alíquota:
+                          {{
+                            formatAliquotaSobreNf(tax, entry.myRevenueNumber)
+                          }}</small
+                        >
                       </article>
-                    </div>
-                  </div>
-                </td>
-              </tr>
-
-              <tr v-if="editingEntryId === entry.id">
-                <td colspan="6" class="details-row">
-                  <div class="inline-panel">
-                    <div class="inline-panel__header">
-                      <div>
-                        <p class="section-header__eyebrow">Edição</p>
-                        <h3>Atualizar lançamento</h3>
-                      </div>
-                    </div>
-
-                    <div class="launch-form-layout launch-form-layout--edit">
-                      <label class="upload-dropzone upload-dropzone--input">
-                        <input
-                          type="file"
-                          accept=".xml"
-                          hidden
-                          @change="handleEditFileChange"
-                        />
-                        <i class="pi pi-file-edit" />
-                        <strong>{{ editFileName }}</strong>
-                        <p>Troque o XML para atualizar os dados da nota.</p>
-                      </label>
-
-                      <div class="launch-form-side">
-                        <label class="mock-field">
-                          <span>Razão social</span>
-                          <select v-model="editForm.contractor" class="mock-input">
-                            <option
-                              v-for="contractor in contractorOptions"
-                              :key="contractor"
-                              :value="contractor"
-                            >
-                              {{ contractor }}
-                            </option>
-                          </select>
-                        </label>
-
-                        <label class="mock-field">
-                          <span>Receita da Contratante</span>
-                          <input v-model="editForm.contractorRevenue" class="mock-input" />
-                        </label>
-                      </div>
-                    </div>
-
-                    <div class="table-actions">
-                      <button
-                        type="button"
-                        class="table-action table-action--success"
-                        @click="saveEdit"
-                      >
-                        <i class="pi pi-check" />
-                        <span>Salvar edição</span>
-                      </button>
-                      <button
-                        type="button"
-                        class="table-action table-action--ghost"
-                        @click="cancelEdit"
-                      >
-                        <i class="pi pi-times" />
-                        <span>Cancelar</span>
-                      </button>
-                    </div>
-                  </div>
-                </td>
-              </tr>
-
-              <tr v-if="deletingEntryId === entry.id">
-                <td colspan="6" class="details-row">
-                  <div class="inline-panel inline-panel--danger">
-                    <div class="inline-panel__header">
-                      <div>
-                        <p class="section-header__eyebrow">Exclusão</p>
-                        <h3>Deseja realmente excluir este lançamento?</h3>
-                      </div>
-                    </div>
-
-                    <p class="inline-panel__text">
-                      Essa ação remove a nota da sua lista atual. Confirme somente se tiver certeza.
-                    </p>
-
-                    <div class="table-actions">
-                      <button
-                        type="button"
-                        class="table-action table-action--danger"
-                        @click="confirmDeleteEntry(entry.id)"
-                      >
-                        <i class="pi pi-trash" />
-                        <span>Excluir lançamento</span>
-                      </button>
-                      <button
-                        type="button"
-                        class="table-action table-action--ghost"
-                        @click="closeInlinePanels"
-                      >
-                        <i class="pi pi-times" />
-                        <span>Cancelar</span>
-                      </button>
                     </div>
                   </div>
                 </td>
@@ -727,7 +462,7 @@ const nextPage = () => {
         </table>
       </div>
 
-      <div v-if="totalPages > 1" class="table-pagination">
+      <div v-if="!pending && totalPages > 1" class="table-pagination">
         <button
           type="button"
           class="table-action table-action--ghost"
@@ -753,87 +488,23 @@ const nextPage = () => {
 </template>
 
 <style scoped>
-.launch-form-card {
+.launch-form-card,
+.section-toolbar {
   display: grid;
   gap: 1.25rem;
 }
 
-.switch-field {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  border: 1px solid rgba(20, 32, 19, 0.07);
-  border-radius: 1.4rem;
-  background: rgba(245, 249, 245, 0.94);
-  padding: 1rem 1.1rem;
-}
-
-.switch-field__copy {
-  display: grid;
-  gap: 0.25rem;
-}
-
-.switch-field__copy strong,
-.switch-field__copy small {
+.launch-form-hint {
   margin: 0;
-}
-
-.switch-field__copy small {
   color: var(--color-muted);
-  line-height: 1.5;
-}
-
-.switch-field__control {
-  position: relative;
-  display: inline-flex;
-}
-
-.switch-field__control input {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  cursor: pointer;
-}
-
-.switch-field__track {
-  position: relative;
-  width: 3.4rem;
-  height: 2rem;
-  border-radius: 999px;
-  background: rgba(20, 32, 19, 0.12);
-  transition: background-color 0.2s ease;
-}
-
-.switch-field__track::after {
-  content: "";
-  position: absolute;
-  top: 0.2rem;
-  left: 0.2rem;
-  width: 1.6rem;
-  height: 1.6rem;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 6px 12px rgba(20, 32, 19, 0.14);
-  transition: transform 0.2s ease;
-}
-
-.switch-field__control input:checked + .switch-field__track {
-  background: var(--color-brand);
-}
-
-.switch-field__control input:checked + .switch-field__track::after {
-  transform: translateX(1.4rem);
+  font-size: 0.95rem;
+  line-height: 1.55;
 }
 
 .launch-form-layout {
   display: grid;
   gap: 1rem;
   grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.9fr);
-}
-
-.launch-form-layout--edit {
-  align-items: stretch;
 }
 
 .launch-form-side {
@@ -851,13 +522,25 @@ const nextPage = () => {
   justify-content: flex-end;
 }
 
-.launch-stats {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+.launch-empty-hero {
+  border: 1px dashed rgba(20, 32, 19, 0.12);
+  background: rgba(247, 250, 247, 0.75);
 }
 
-.section-toolbar {
-  display: grid;
-  gap: 1rem;
+.empty-state--stacked {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.empty-state--panel {
+  border: 1px dashed rgba(20, 32, 19, 0.12);
+  border-radius: 1.25rem;
+  background: rgba(247, 250, 247, 0.65);
+  padding: 1.35rem 1.25rem;
+}
+
+.launch-stats {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .table-search {
@@ -869,69 +552,6 @@ const nextPage = () => {
 
 .table-search .mock-field {
   flex: 1;
-}
-
-.contractor-cell {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-}
-
-.info-tooltip {
-  position: relative;
-  display: inline-flex;
-}
-
-.info-tooltip__trigger {
-  display: grid;
-  width: 1.4rem;
-  height: 1.4rem;
-  place-items: center;
-  border: 0;
-  border-radius: 999px;
-  background: rgba(37, 99, 166, 0.12);
-  color: #2563a6;
-  padding: 0;
-}
-
-.info-tooltip__panel {
-  position: absolute;
-  left: calc(100% + 0.5rem);
-  top: 50%;
-  z-index: 4;
-  width: 16rem;
-  border: 1px solid rgba(20, 32, 19, 0.08);
-  border-radius: 0.9rem;
-  background: #fff;
-  box-shadow: 0 18px 36px rgba(20, 32, 19, 0.12);
-  color: var(--color-text);
-  line-height: 1.45;
-  opacity: 0;
-  padding: 0.8rem 0.9rem;
-  pointer-events: none;
-  transform: translateY(-50%) translateX(-4px);
-  transition:
-    opacity 0.18s ease,
-    transform 0.18s ease;
-}
-
-.info-tooltip:hover .info-tooltip__panel,
-.info-tooltip:focus-within .info-tooltip__panel {
-  opacity: 1;
-  transform: translateY(-50%) translateX(0);
-}
-
-.tax-cell {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.table-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
 }
 
 .table-action {
@@ -950,25 +570,10 @@ const nextPage = () => {
   opacity: 0.55;
 }
 
-.table-action--edit {
-  background: rgba(37, 99, 166, 0.12);
-  color: #2563a6;
-}
-
 .table-action--ghost {
   border-color: rgba(20, 32, 19, 0.1);
   background: #fff;
   color: var(--color-text);
-}
-
-.table-action--danger {
-  background: rgba(187, 52, 52, 0.1);
-  color: #ab3030;
-}
-
-.table-action--success {
-  background: rgba(47, 122, 79, 0.12);
-  color: var(--color-brand-strong);
 }
 
 .details-row td {
@@ -983,19 +588,41 @@ const nextPage = () => {
   padding: 1.2rem;
 }
 
-.inline-panel--danger {
-  background: rgba(255, 244, 244, 0.96);
-}
-
-.inline-panel__header h3 {
+.inline-panel h3 {
   margin: 0.35rem 0 0;
   font-size: 1.1rem;
 }
 
-.inline-panel__text {
+.tax-panel-summary {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0.75rem 0 0;
+  padding: 0.75rem 0.95rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(20, 32, 19, 0.08);
+  background: #fff;
+}
+
+.tax-panel-summary__label {
   margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--color-muted);
-  line-height: 1.5;
+}
+
+.tax-panel-summary__value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.tax-panel-summary__hint {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--color-muted);
 }
 
 .tax-grid {
@@ -1013,15 +640,26 @@ const nextPage = () => {
   padding: 1rem;
 }
 
-.tax-card p,
-.tax-card strong,
-.tax-card small {
+.tax-card__name,
+.tax-card__value,
+.tax-card__declared,
+.tax-card__aliquota {
   margin: 0;
 }
 
-.tax-card p,
-.tax-card small {
+.tax-card__name,
+.tax-card__declared,
+.tax-card__aliquota {
   color: var(--color-muted);
+}
+
+.tax-card__name {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.tax-card__value {
+  font-size: 1.05rem;
 }
 
 .table-pagination {
@@ -1060,31 +698,14 @@ const nextPage = () => {
   .tax-grid {
     grid-template-columns: 1fr;
   }
-
-  .info-tooltip__panel {
-    left: 0;
-    top: calc(100% + 0.4rem);
-    transform: translateY(0);
-  }
-
-  .info-tooltip:hover .info-tooltip__panel,
-  .info-tooltip:focus-within .info-tooltip__panel {
-    transform: translateY(0);
-  }
 }
 
 @media (max-width: 820px) {
   .launch-stats,
   .table-search,
-  .switch-field,
   .table-pagination {
     grid-template-columns: 1fr;
     align-items: stretch;
-    flex-direction: column;
-  }
-
-  .tax-cell {
-    align-items: flex-start;
     flex-direction: column;
   }
 }

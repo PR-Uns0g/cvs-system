@@ -12,8 +12,11 @@ export default defineNuxtConfig({
     "~/assets/styles/main.css",
   ],
   runtimeConfig: {
+    apiBase:
+      process.env.NUXT_API_BASE ||
+      "https://sistema-gest-o-financeira.onrender.com",
     public: {
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || "http://localhost:8000/api",
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || "/api",
     },
   },
   app: {
@@ -22,7 +25,7 @@ export default defineNuxtConfig({
       meta: [
         {
           name: "description",
-          content: "Frontend do sistema de gestao financeira e notas fiscais.",
+          content: "Frontend do sistema de gestão financeira e notas fiscais.",
         },
       ],
     },

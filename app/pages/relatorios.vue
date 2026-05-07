@@ -9,44 +9,37 @@ useHead({
   title: "Relatórios | CVS System",
 });
 
-const contractorOptions: SelectableOption[] = [
-  {
-    id: "nova-era",
-    label: "Nova Era Distribuidora",
-    helper: "",
-  },
-  {
-    id: "horizonte",
-    label: "Comercial Horizonte",
-    helper: "",
-  },
-  {
-    id: "sao-jorge",
-    label: "Atacado São Jorge",
-    helper: "",
-  },
-  {
-    id: "central",
-    label: "Central Alimentos",
-    helper: "",
-  },
-];
+const { data: contractorsPayload } = await useFetch("/api/contratantes", {
+  key: "report-contractors",
+});
+
+const contractorOptions = computed<SelectableOption[]>(() =>
+  asArray(contractorsPayload.value).map((item) => {
+    const contractor = normalizeContractor(item);
+
+    return {
+      id: String(contractor.id),
+      label: contractor.legalName,
+      helper: contractor.document,
+    };
+  }),
+);
 
 const fieldOptions: SelectableOption[] = [
   {
     id: "contractor-revenue",
     label: "Receita do contratante",
-    helper: "Mostra o valor total da nota fiscal.",
+    helper: "Valor informado no lançamento (faturamento_contratante na API).",
   },
   {
     id: "my-revenue",
-    label: "Meu faturamento",
-    helper: "Mostra o valor da comissão do representante.",
+    label: "Valor da NF",
+    helper: "Valor dos serviços no XML (valor_nf na API).",
   },
   {
     id: "taxes",
     label: "Impostos",
-    helper: "Inclui total e composição tributária no relatório.",
+    helper: "Total e detalhe dos tributos retornados no JSON (impostos).",
   },
 ];
 
@@ -55,8 +48,26 @@ const period = reactive({
   end: "2026-03-28",
 });
 
-const selectedContractors = ref(contractorOptions.map((option) => option.id));
+const selectedContractors = ref<string[]>([]);
 const selectedFields = ref(["contractor-revenue", "my-revenue"]);
+const isGenerating = ref(false);
+const feedback = ref<{ tone: "success" | "danger"; message: string } | null>(null);
+
+watch(
+  contractorOptions,
+  (options) => {
+    if (!options.length) {
+      selectedContractors.value = [];
+      return;
+    }
+    if (!selectedContractors.value.length) {
+      selectedContractors.value = options.map((option) => option.id);
+    }
+  },
+  { immediate: true },
+);
+
+const hasContractors = computed(() => contractorOptions.value.length > 0);
 
 const canGenerate = computed(
   () => selectedContractors.value.length > 0 && selectedFields.value.length > 0,
@@ -64,9 +75,9 @@ const canGenerate = computed(
 
 const toggleAllContractors = () => {
   selectedContractors.value =
-    selectedContractors.value.length === contractorOptions.length
+    selectedContractors.value.length === contractorOptions.value.length
       ? []
-      : contractorOptions.map((option) => option.id);
+      : contractorOptions.value.map((option) => option.id);
 };
 
 const toggleAllFields = () => {
@@ -87,13 +98,51 @@ const toggleField = (optionId: string) => {
     ? selectedFields.value.filter((id) => id !== optionId)
     : [...selectedFields.value, optionId];
 };
+
+const generateReport = async () => {
+  feedback.value = null;
+  isGenerating.value = true;
+
+  try {
+    const blob = await $fetch<Blob>("/api/exportar-excel", {
+      method: "GET",
+      responseType: "blob",
+      query: {
+        data_inicial: period.start,
+        data_final: period.end,
+        contratantes: selectedContractors.value.join(","),
+        campos: selectedFields.value.join(","),
+      },
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `relatorio-cvs-${period.start}-${period.end}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    feedback.value = {
+      tone: "success",
+      message: "Relatório gerado e baixado.",
+    };
+  } catch (error: unknown) {
+    feedback.value = {
+      tone: "danger",
+      message:
+        error && typeof error === "object" && "statusMessage" in error
+          ? String(error.statusMessage)
+          : "Não foi possível gerar o relatório.",
+    };
+  } finally {
+    isGenerating.value = false;
+  }
+};
 </script>
 
 <template>
   <AppPageShell
     eyebrow="Configuração"
     title="Relatórios"
-    subtitle="O relatório é gerado sob demanda e baixado direto para o computador do representante, sem armazenamento dentro do sistema."
+    subtitle="O relatório é montado a partir dos lançamentos da API e baixado em CSV (Excel)."
   >
     <section class="panel-card report-notice">
       <i class="pi pi-info-circle" />
@@ -105,6 +154,16 @@ const toggleField = (optionId: string) => {
         </p>
       </div>
     </section>
+
+    <p
+      v-if="feedback"
+      :class="[
+        'form-feedback',
+        feedback.tone === 'success' ? 'form-feedback--success' : 'form-feedback--danger',
+      ]"
+    >
+      {{ feedback.message }}
+    </p>
 
     <section class="panel-card report-builder">
       <div class="section-header">
@@ -136,6 +195,7 @@ const toggleField = (optionId: string) => {
               <p>Selecione um, vários ou todos de uma vez.</p>
             </div>
             <button
+              v-if="hasContractors"
               type="button"
               class="table-action table-action--ghost"
               @click="toggleAllContractors"
@@ -144,7 +204,19 @@ const toggleField = (optionId: string) => {
             </button>
           </div>
 
-          <div class="choice-grid">
+          <div v-if="!hasContractors" class="empty-state empty-state--report">
+            <i class="pi pi-file-export" />
+            <div>
+              <strong>Nenhum contratante para incluir no relatório.</strong>
+              <p>
+                Cadastre contratantes e importe lançamentos primeiro; o arquivo exportado só contém
+                dados reais da API (nada é inventado aqui).
+              </p>
+              <NuxtLink to="/contratantes" class="report-empty-link">Ir para contratantes</NuxtLink>
+            </div>
+          </div>
+
+          <div v-else class="choice-grid">
             <label
               v-for="option in contractorOptions"
               :key="option.id"
@@ -205,13 +277,20 @@ const toggleField = (optionId: string) => {
       </div>
 
       <div class="report-builder__footer">
-        <p>
-          O arquivo será preparado com base exatamente nessas seleções e baixado
-          para a sua máquina.
+        <p v-if="hasContractors">
+          O arquivo será preparado com base nessas seleções e baixado para a sua máquina.
         </p>
-        <button type="button" class="page-shell__cta" :disabled="!canGenerate">
+        <p v-else>
+          Cadastre ao menos um contratante para habilitar a exportação.
+        </p>
+        <button
+          type="button"
+          class="page-shell__cta"
+          :disabled="!canGenerate || isGenerating"
+          @click="generateReport"
+        >
           <i class="pi pi-download" />
-          <span>Gerar relatório</span>
+          <span>{{ isGenerating ? "Gerando..." : "Gerar relatório" }}</span>
         </button>
       </div>
     </section>
@@ -360,6 +439,24 @@ const toggleField = (optionId: string) => {
   border-color: rgba(20, 32, 19, 0.1);
   background: #fff;
   color: var(--color-text);
+}
+
+.empty-state--report {
+  flex-direction: column;
+  align-items: flex-start;
+  border: 1px dashed rgba(20, 32, 19, 0.12);
+  border-radius: 1.25rem;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 1.15rem 1rem;
+}
+
+.report-empty-link {
+  display: inline-block;
+  margin-top: 0.65rem;
+  font-weight: 700;
+  color: var(--color-brand-strong);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
 }
 
 @media (max-width: 1024px) {
