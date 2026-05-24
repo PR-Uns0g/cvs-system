@@ -1,5 +1,5 @@
 export default defineNuxtRouteMiddleware(async (to) => {
-  const publicRoutes = new Set(["/login"]);
+  const publicRoutes = new Set(["/login", "/admin"]);
   const { user, fetchSession } = useAuth();
 
   if (publicRoutes.has(to.path)) {
@@ -11,7 +11,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
       }
     }
 
-    return navigateTo("/");
+    return navigateTo("/dashboard");
   }
 
   if (user.value) {

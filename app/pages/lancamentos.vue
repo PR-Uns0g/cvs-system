@@ -1,9 +1,11 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import type { Contractor, LaunchEntry, TaxDetail } from "~/types/api";
 
 useHead({
   title: "Lançamentos | CVS System",
 });
+
+const launchesQuery = ref<Record<string, string>>({});
 
 const {
   data: launchesPayload,
@@ -11,6 +13,7 @@ const {
   refresh,
 } = await useFetch("/api/lancamentos", {
   key: "launches",
+  query: launchesQuery,
 });
 const { data: contractorsPayload } = await useFetch("/api/contratantes", {
   key: "launch-contractors",
@@ -32,14 +35,40 @@ const contractors = computed<Contractor[]>(() =>
 );
 
 const showCreateForm = ref(false);
+const showManualForm = ref(false);
 const selectedFile = ref<File | null>(null);
 const isUploading = ref(false);
+const isSavingManual = ref(false);
+const deletingId = ref<string | number | null>(null);
 const feedback = ref<{ tone: "success" | "danger"; message: string } | null>(
   null,
 );
 const createForm = reactive({
   contractorRevenue: "",
 });
+const manualForm = reactive({
+  contractorId: "",
+  nfValue: "",
+  contractorRevenue: "",
+  emissionDate: "",
+  pis: "",
+  cofins: "",
+  inss: "",
+  ir: "",
+  csll: "",
+  iss: "",
+  other: "",
+});
+
+const taxFields = [
+  ["PIS", "pis"],
+  ["COFINS", "cofins"],
+  ["INSS", "inss"],
+  ["IR", "ir"],
+  ["CSLL", "csll"],
+  ["ISS", "iss"],
+  ["Other", "other"],
+] as const;
 
 const search = ref("");
 const currentPage = ref(1);
@@ -98,8 +127,29 @@ watch(filteredEntries, () => {
   }
 });
 
+watch(
+  contractors,
+  (items) => {
+    if (!manualForm.contractorId && items.length) {
+      manualForm.contractorId = String(items[0]!.id);
+    }
+  },
+  { immediate: true },
+);
+
 const toggleCreateForm = () => {
   showCreateForm.value = !showCreateForm.value;
+  if (showCreateForm.value) {
+    showManualForm.value = false;
+  }
+  feedback.value = null;
+};
+
+const toggleManualForm = () => {
+  showManualForm.value = !showManualForm.value;
+  if (showManualForm.value) {
+    showCreateForm.value = false;
+  }
   feedback.value = null;
 };
 
@@ -160,8 +210,109 @@ const saveCreateEntry = async () => {
   }
 };
 
+const resetManualForm = () => {
+  manualForm.nfValue = "";
+  manualForm.contractorRevenue = "";
+  manualForm.emissionDate = "";
+  for (const [, key] of taxFields) {
+    manualForm[key] = "";
+  }
+};
+
+const buildManualTaxes = () =>
+  Object.fromEntries(
+    taxFields
+      .map(([apiName, key]) => [apiName, manualForm[key].trim()] as const)
+      .filter(([, value]) => value !== ""),
+  );
+
+const saveManualEntry = async () => {
+  if (!manualForm.contractorId) {
+    feedback.value = {
+      tone: "danger",
+      message: "Selecione um contratante antes de salvar.",
+    };
+    return;
+  }
+
+  feedback.value = null;
+  isSavingManual.value = true;
+
+  try {
+    await $fetch("/api/lancamentos/manual", {
+      method: "POST",
+      body: {
+        contratante_id: Number(manualForm.contractorId),
+        valor_nf: manualForm.nfValue,
+        faturamento_contratante: manualForm.contractorRevenue,
+        impostos: buildManualTaxes(),
+        data_emissao: manualForm.emissionDate
+          ? new Date(manualForm.emissionDate).toISOString()
+          : null,
+      },
+    });
+    resetManualForm();
+    showManualForm.value = false;
+    feedback.value = {
+      tone: "success",
+      message: "Lançamento manual cadastrado com sucesso.",
+    };
+    await refresh();
+  } catch (error: unknown) {
+    feedback.value = {
+      tone: "danger",
+      message:
+        error && typeof error === "object" && "statusMessage" in error
+          ? String(error.statusMessage)
+          : "Não foi possível cadastrar o lançamento manual.",
+    };
+  } finally {
+    isSavingManual.value = false;
+  }
+};
+
+const applyLaunchPeriod = (period: {
+  period_start: string;
+  period_end: string;
+}) => {
+  launchesQuery.value = {
+    period_start: period.period_start,
+    period_end: period.period_end,
+  };
+  currentPage.value = 1;
+};
+
 const toggleTaxes = (entryId: string | number) => {
   expandedTaxesId.value = expandedTaxesId.value === entryId ? null : entryId;
+};
+
+const deleteEntry = async (entry: LaunchEntry) => {
+  feedback.value = null;
+  deletingId.value = entry.id;
+
+  try {
+    await $fetch(`/api/lancamentos/${entry.id}`, {
+      method: "DELETE",
+    });
+    if (expandedTaxesId.value === entry.id) {
+      expandedTaxesId.value = null;
+    }
+    feedback.value = {
+      tone: "success",
+      message: "Lançamento removido com sucesso.",
+    };
+    await refresh();
+  } catch (error: unknown) {
+    feedback.value = {
+      tone: "danger",
+      message:
+        error && typeof error === "object" && "statusMessage" in error
+          ? String(error.statusMessage)
+          : "Não foi possível remover o lançamento.",
+    };
+  } finally {
+    deletingId.value = null;
+  }
 };
 
 const previousPage = () => {
@@ -180,7 +331,7 @@ const percentFormatter = new Intl.NumberFormat("pt-BR", {
 /** Alíquota total: soma dos impostos sobre o valor da NF (%). */
 const formatAliquotaTotalSobreNf = (entry: LaunchEntry) => {
   if (entry.myRevenueNumber <= 0) {
-    return "—";
+    return "â€”";
   }
   return `${percentFormatter.format((entry.taxesTotalNumber / entry.myRevenueNumber) * 100)}%`;
 };
@@ -188,7 +339,7 @@ const formatAliquotaTotalSobreNf = (entry: LaunchEntry) => {
 /** Alíquota do tributo sobre o valor da NF (%). */
 const formatAliquotaSobreNf = (tax: TaxDetail, nf: number) => {
   if (nf <= 0) {
-    return "—";
+    return "â€”";
   }
   return `${percentFormatter.format((tax.valueNumber / nf) * 100)}%`;
 };
@@ -201,17 +352,27 @@ const formatAliquotaSobreNf = (tax: TaxDetail, nf: number) => {
     subtitle="Importe XMLs e acompanhe os lançamentos retornados pela API autenticada."
   >
     <template #actions>
-      <button
-        type="button"
-        :class="[
-          'page-shell__cta',
-          { 'page-shell__cta--danger': showCreateForm },
-        ]"
-        @click="toggleCreateForm"
-      >
-        <i :class="showCreateForm ? 'pi pi-times' : 'pi pi-upload'" />
-        <span>{{ showCreateForm ? "Fechar cadastro" : "Enviar XML" }}</span>
-      </button>
+      <div class="launch-actions">
+        <button
+          type="button"
+          :class="['secondary-action', { 'page-shell__cta--danger': showManualForm }]"
+          @click="toggleManualForm"
+        >
+          <i class="pi pi-pencil" />
+          <span>{{ showManualForm ? "Fechar manual" : "Lançamento manual" }}</span>
+        </button>
+        <button
+          type="button"
+          :class="[
+            'page-shell__cta',
+            { 'page-shell__cta--danger': showCreateForm },
+          ]"
+          @click="toggleCreateForm"
+        >
+          <i :class="showCreateForm ? 'pi pi-times' : 'pi pi-upload'" />
+          <span>{{ showCreateForm ? "Fechar cadastro" : "Enviar XML" }}</span>
+        </button>
+      </div>
     </template>
 
     <p
@@ -279,11 +440,95 @@ const formatAliquotaSobreNf = (tax: TaxDetail, nf: number) => {
       </form>
     </Transition>
 
+    <Transition name="expand-fade">
+      <form
+        v-if="showManualForm"
+        class="panel-card launch-form-card"
+        @submit.prevent="saveManualEntry"
+      >
+        <div class="section-header">
+          <div>
+            <p class="section-header__eyebrow">Novo lançamento</p>
+            <h2>Cadastro manual</h2>
+          </div>
+        </div>
+
+        <div v-if="!contractors.length" class="empty-state empty-state--void">
+          <i class="pi pi-users" />
+          <div>
+            <strong>Nenhum contratante disponível.</strong>
+            <p>Cadastre um contratante antes de criar lançamentos manuais.</p>
+          </div>
+        </div>
+
+        <template v-else>
+          <div class="manual-form-grid">
+            <label class="mock-field manual-form-grid__wide">
+              <span>Contratante</span>
+              <select v-model="manualForm.contractorId" class="mock-input" required>
+                <option
+                  v-for="contractor in contractors"
+                  :key="contractor.id"
+                  :value="contractor.id"
+                >
+                  {{ contractor.legalName }}
+                </option>
+              </select>
+            </label>
+
+            <label class="mock-field">
+              <span>Valor da NF</span>
+              <input v-model.trim="manualForm.nfValue" class="mock-input" inputmode="decimal" required />
+            </label>
+
+            <label class="mock-field">
+              <span>Faturamento do contratante</span>
+              <input
+                v-model.trim="manualForm.contractorRevenue"
+                class="mock-input"
+                inputmode="decimal"
+                required
+              />
+            </label>
+
+            <label class="mock-field manual-form-grid__wide">
+              <span>Data de emissão</span>
+              <input v-model="manualForm.emissionDate" class="mock-input" type="datetime-local" />
+            </label>
+          </div>
+
+          <div class="tax-section">
+            <p class="section-header__eyebrow">Impostos</p>
+            <div class="tax-section__grid">
+              <label v-for="[label, key] in taxFields" :key="key" class="mock-field">
+                <span>{{ label }}</span>
+                <input v-model.trim="manualForm[key]" class="mock-input" inputmode="decimal" />
+              </label>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="page-shell__cta" :disabled="isSavingManual">
+              <i class="pi pi-check" />
+              <span>{{ isSavingManual ? "Salvando..." : "Salvar lançamento manual" }}</span>
+            </button>
+          </div>
+        </template>
+      </form>
+    </Transition>
+
+    <section class="panel-card filter-strip">
+      <div class="filter-strip__item">
+        <span>Período</span>
+        <AppPeriodSelector :disabled="pending" @change="applyLaunchPeriod" />
+      </div>
+    </section>
+
     <section
       v-if="!pending && !entries.length"
       class="panel-card launch-empty-hero"
     >
-      <div class="empty-state empty-state--stacked">
+      <div class="empty-state empty-state--void empty-state--stacked">
         <i class="pi pi-receipt" />
         <div>
           <strong>Nenhum lançamento na sua conta ainda.</strong>
@@ -343,14 +588,17 @@ const formatAliquotaSobreNf = (tax: TaxDetail, nf: number) => {
         </div>
       </div>
 
-      <div v-if="pending" class="empty-state empty-state--panel">
+      <div v-if="pending" class="empty-state empty-state--loading">
         <i class="pi pi-spin pi-spinner" />
         <div>
           <strong>Carregando lançamentos...</strong>
         </div>
       </div>
 
-      <div v-else-if="!filteredEntries.length" class="empty-state">
+      <div
+        v-else-if="!filteredEntries.length"
+        :class="['empty-state', isSearchEmpty ? 'empty-state--search' : 'empty-state--void']"
+      >
         <i class="pi pi-receipt" />
         <div>
           <strong>{{
@@ -378,6 +626,7 @@ const formatAliquotaSobreNf = (tax: TaxDetail, nf: number) => {
               <th>Total Impostos</th>
               <th>Status</th>
               <th>Impostos</th>
+              <th>Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -411,10 +660,21 @@ const formatAliquotaSobreNf = (tax: TaxDetail, nf: number) => {
                     <span>Ver</span>
                   </button>
                 </td>
+                <td>
+                  <button
+                    type="button"
+                    class="table-action table-action--danger"
+                    :disabled="deletingId === entry.id"
+                    @click="deleteEntry(entry)"
+                  >
+                    <i class="pi pi-trash" />
+                    <span>{{ deletingId === entry.id ? "Removendo" : "Remover" }}</span>
+                  </button>
+                </td>
               </tr>
 
               <tr v-if="expandedTaxesId === entry.id">
-                <td colspan="6" class="details-row">
+                <td colspan="7" class="details-row">
                   <div class="inline-panel">
                     <div>
                       <p class="section-header__eyebrow">Impostos</p>
@@ -494,6 +754,13 @@ const formatAliquotaSobreNf = (tax: TaxDetail, nf: number) => {
   gap: 1.25rem;
 }
 
+.launch-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
 .launch-form-hint {
   margin: 0;
   color: var(--color-muted);
@@ -513,6 +780,22 @@ const formatAliquotaSobreNf = (tax: TaxDetail, nf: number) => {
   gap: 1rem;
 }
 
+.manual-form-grid,
+.tax-section__grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.manual-form-grid__wide {
+  grid-column: 1 / -1;
+}
+
+.tax-section {
+  display: grid;
+  gap: 0.75rem;
+}
+
 .upload-dropzone--input {
   cursor: pointer;
 }
@@ -523,20 +806,9 @@ const formatAliquotaSobreNf = (tax: TaxDetail, nf: number) => {
 }
 
 .launch-empty-hero {
-  border: 1px dashed rgba(20, 32, 19, 0.12);
-  background: rgba(247, 250, 247, 0.75);
-}
-
-.empty-state--stacked {
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.empty-state--panel {
-  border: 1px dashed rgba(20, 32, 19, 0.12);
-  border-radius: 1.25rem;
-  background: rgba(247, 250, 247, 0.65);
-  padding: 1.35rem 1.25rem;
+  border: none;
+  background: transparent;
+  padding: 0;
 }
 
 .launch-stats {
@@ -574,6 +846,12 @@ const formatAliquotaSobreNf = (tax: TaxDetail, nf: number) => {
   border-color: rgba(20, 32, 19, 0.1);
   background: #fff;
   color: var(--color-text);
+}
+
+.table-action--danger {
+  border-color: rgba(187, 52, 52, 0.14);
+  background: rgba(187, 52, 52, 0.08);
+  color: #ab3030;
 }
 
 .details-row td {
@@ -695,6 +973,8 @@ const formatAliquotaSobreNf = (tax: TaxDetail, nf: number) => {
 
 @media (max-width: 1100px) {
   .launch-form-layout,
+  .manual-form-grid,
+  .tax-section__grid,
   .tax-grid {
     grid-template-columns: 1fr;
   }

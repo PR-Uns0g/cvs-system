@@ -17,13 +17,24 @@ const credentials = reactive({
 const isSubmitting = ref(false);
 const errorMessage = ref("");
 
+const redirectTarget = computed(() => {
+  const redirect = route.query.redirect;
+  const value = Array.isArray(redirect) ? redirect[0] : redirect;
+
+  if (typeof value === "string" && value.startsWith("/")) {
+    return value;
+  }
+
+  return "/dashboard";
+});
+
 const submitLogin = async () => {
   errorMessage.value = "";
   isSubmitting.value = true;
 
   try {
     await login(credentials);
-    await navigateTo(String(route.query.redirect || "/"));
+    await navigateTo(redirectTarget.value);
   } catch (error: unknown) {
     errorMessage.value =
       error && typeof error === "object" && "statusMessage" in error

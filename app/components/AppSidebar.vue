@@ -9,7 +9,7 @@ const navigationItems = [
   {
     label: "Dashboard",
     description: "Veja os seus ganhos rápido",
-    to: "/",
+    to: "/dashboard",
     icon: "pi pi-home",
   },
   {
@@ -44,8 +44,8 @@ const handleLogout = async () => {
 };
 
 const isActiveRoute = (to: string) => {
-  if (to === "/") {
-    return route.path === "/";
+  if (to === "/dashboard") {
+    return route.path === "/" || route.path === "/dashboard";
   }
 
   return route.path.startsWith(to);
@@ -102,6 +102,7 @@ const isActiveRoute = (to: string) => {
 
           <span class="app-user-trigger__copy">
             <strong>{{ user?.name || user?.email || "Usuário" }}</strong>
+            <small v-if="user?.email">{{ user.email }}</small>
           </span>
 
           <i class="pi pi-chevron-up app-user-trigger__chevron" />
@@ -312,6 +313,15 @@ const isActiveRoute = (to: string) => {
 
 .app-user-trigger__copy strong {
   font-size: 0.92rem;
+}
+
+.app-user-trigger__copy small {
+  overflow: hidden;
+  color: var(--color-muted);
+  font-size: 0.76rem;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .app-user-trigger__chevron {

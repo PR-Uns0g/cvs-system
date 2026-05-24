@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 type SelectableOption = {
   id: string;
   label: string;
@@ -27,17 +27,17 @@ const contractorOptions = computed<SelectableOption[]>(() =>
 
 const fieldOptions: SelectableOption[] = [
   {
-    id: "contractor-revenue",
+    id: "contratantes_revenue",
     label: "Receita do contratante",
     helper: "Valor informado no lançamento (faturamento_contratante na API).",
   },
   {
-    id: "my-revenue",
+    id: "users_revenue",
     label: "Valor da NF",
     helper: "Valor dos serviços no XML (valor_nf na API).",
   },
   {
-    id: "taxes",
+    id: "impostos_amount",
     label: "Impostos",
     helper: "Total e detalhe dos tributos retornados no JSON (impostos).",
   },
@@ -49,9 +49,11 @@ const period = reactive({
 });
 
 const selectedContractors = ref<string[]>([]);
-const selectedFields = ref(["contractor-revenue", "my-revenue"]);
+const selectedFields = ref(["contratantes_revenue", "users_revenue"]);
 const isGenerating = ref(false);
-const feedback = ref<{ tone: "success" | "danger"; message: string } | null>(null);
+const feedback = ref<{ tone: "success" | "danger"; message: string } | null>(
+  null,
+);
 
 watch(
   contractorOptions,
@@ -72,6 +74,21 @@ const hasContractors = computed(() => contractorOptions.value.length > 0);
 const canGenerate = computed(
   () => selectedContractors.value.length > 0 && selectedFields.value.length > 0,
 );
+
+const reportPostBody = computed(() => ({
+  period_start: period.start,
+  period_end: period.end,
+  contratante_ids: selectedContractors.value.map((id) => Number(id)),
+  fields: selectedFields.value,
+}));
+
+const applyReportPeriod = (nextPeriod: {
+  period_start: string;
+  period_end: string;
+}) => {
+  period.start = nextPeriod.period_start;
+  period.end = nextPeriod.period_end;
+};
 
 const toggleAllContractors = () => {
   selectedContractors.value =
@@ -104,20 +121,15 @@ const generateReport = async () => {
   isGenerating.value = true;
 
   try {
-    const blob = await $fetch<Blob>("/api/exportar-excel", {
-      method: "GET",
+    const blob = await $fetch<Blob>("/api/relatorios", {
+      method: "POST",
       responseType: "blob",
-      query: {
-        data_inicial: period.start,
-        data_final: period.end,
-        contratantes: selectedContractors.value.join(","),
-        campos: selectedFields.value.join(","),
-      },
+      body: reportPostBody.value,
     });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `relatorio-cvs-${period.start}-${period.end}.csv`;
+    link.download = `relatorio-cvs-${period.start}-${period.end}.xlsx`;
     link.click();
     URL.revokeObjectURL(url);
     feedback.value = {
@@ -142,7 +154,7 @@ const generateReport = async () => {
   <AppPageShell
     eyebrow="Configuração"
     title="Relatórios"
-    subtitle="O relatório é montado a partir dos lançamentos da API e baixado em CSV (Excel)."
+    subtitle="O relatório é montado pela API e baixado como XLSX."
   >
     <section class="panel-card report-notice">
       <i class="pi pi-info-circle" />
@@ -159,7 +171,9 @@ const generateReport = async () => {
       v-if="feedback"
       :class="[
         'form-feedback',
-        feedback.tone === 'success' ? 'form-feedback--success' : 'form-feedback--danger',
+        feedback.tone === 'success'
+          ? 'form-feedback--success'
+          : 'form-feedback--danger',
       ]"
     >
       {{ feedback.message }}
@@ -176,16 +190,7 @@ const generateReport = async () => {
       <div class="report-builder__grid">
         <article class="report-builder__block">
           <h3>Período a analisar</h3>
-          <div class="report-period-grid">
-            <label class="mock-field">
-              <span>Data inicial</span>
-              <input v-model="period.start" type="date" class="mock-input" />
-            </label>
-            <label class="mock-field">
-              <span>Data final</span>
-              <input v-model="period.end" type="date" class="mock-input" />
-            </label>
-          </div>
+          <AppPeriodSelector @change="applyReportPeriod" />
         </article>
 
         <article class="report-builder__block">
@@ -209,10 +214,12 @@ const generateReport = async () => {
             <div>
               <strong>Nenhum contratante para incluir no relatório.</strong>
               <p>
-                Cadastre contratantes e importe lançamentos primeiro; o arquivo exportado só contém
-                dados reais da API (nada é inventado aqui).
+                Cadastre contratantes e importe lançamentos primeiro; o arquivo
+                exportado só contém dados reais da API (nada é inventado aqui).
               </p>
-              <NuxtLink to="/contratantes" class="report-empty-link">Ir para contratantes</NuxtLink>
+              <NuxtLink to="/contratantes" class="empty-state__link"
+                >Ir para contratantes</NuxtLink
+              >
             </div>
           </div>
 
@@ -278,7 +285,8 @@ const generateReport = async () => {
 
       <div class="report-builder__footer">
         <p v-if="hasContractors">
-          O arquivo será preparado com base nessas seleções e baixado para a sua máquina.
+          O arquivo será preparado com base nessas seleções e baixado para a sua
+          máquina.
         </p>
         <p v-else>
           Cadastre ao menos um contratante para habilitar a exportação.
@@ -439,15 +447,6 @@ const generateReport = async () => {
   border-color: rgba(20, 32, 19, 0.1);
   background: #fff;
   color: var(--color-text);
-}
-
-.empty-state--report {
-  flex-direction: column;
-  align-items: flex-start;
-  border: 1px dashed rgba(20, 32, 19, 0.12);
-  border-radius: 1.25rem;
-  background: rgba(255, 255, 255, 0.85);
-  padding: 1.15rem 1rem;
 }
 
 .report-empty-link {

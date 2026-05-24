@@ -1,17 +1,22 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import type { Contractor } from "~/types/api";
+import { digitsOnly, formatCellphoneInput, formatCnpjInput } from "~/utils/formatters";
 
 useHead({
   title: "Contratantes | CVS System",
 });
 
+const contractorQuery = ref<Record<string, string>>({});
+
 const { data, pending, refresh } = await useFetch("/api/contratantes", {
   key: "contractors",
+  query: contractorQuery,
 });
 
 const search = ref("");
 const showCreateForm = ref(false);
 const isSaving = ref(false);
+const deletingId = ref<string | number | null>(null);
 const feedback = ref<{ tone: "success" | "danger"; message: string } | null>(null);
 
 const createForm = reactive({
@@ -50,6 +55,16 @@ const isContractorSearchEmpty = computed(
   () => contractors.value.length > 0 && filteredContractors.value.length === 0,
 );
 
+const applyContractorPeriod = (period: {
+  period_start: string;
+  period_end: string;
+}) => {
+  contractorQuery.value = {
+    period_start: period.period_start,
+    period_end: period.period_end,
+  };
+};
+
 const toggleCreateForm = () => {
   showCreateForm.value = !showCreateForm.value;
   feedback.value = null;
@@ -62,6 +77,16 @@ const resetCreateForm = () => {
   createForm.phone = "";
 };
 
+const onDocumentInput = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  createForm.document = formatCnpjInput(target.value);
+};
+
+const onPhoneInput = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  createForm.phone = formatCellphoneInput(target.value);
+};
+
 const saveNewContractor = async () => {
   feedback.value = null;
   isSaving.value = true;
@@ -70,9 +95,9 @@ const saveNewContractor = async () => {
     await $fetch("/api/contratantes", {
       method: "POST",
       body: {
-        razao_social: createForm.legalName,
-        cpf_cnpj: createForm.document,
-        telefone: createForm.phone || null,
+        legalName: createForm.legalName,
+        document: digitsOnly(createForm.document),
+        phone: createForm.phone ? digitsOnly(createForm.phone) : null,
         email: createForm.email.trim() || null,
       },
     });
@@ -93,6 +118,32 @@ const saveNewContractor = async () => {
     };
   } finally {
     isSaving.value = false;
+  }
+};
+
+const deleteContractor = async (contractor: Contractor) => {
+  feedback.value = null;
+  deletingId.value = contractor.id;
+
+  try {
+    await $fetch(`/api/contratantes/${contractor.id}`, {
+      method: "DELETE",
+    });
+    feedback.value = {
+      tone: "success",
+      message: "Contratante removido com sucesso.",
+    };
+    await refresh();
+  } catch (error: unknown) {
+    feedback.value = {
+      tone: "danger",
+      message:
+        error && typeof error === "object" && "statusMessage" in error
+          ? String(error.statusMessage)
+          : "Não foi possível remover o contratante.",
+    };
+  } finally {
+    deletingId.value = null;
   }
 };
 </script>
@@ -143,8 +194,15 @@ const saveNewContractor = async () => {
             <input v-model.trim="createForm.legalName" class="mock-input" required />
           </label>
           <label class="mock-field">
-            <span>Documento</span>
-            <input v-model.trim="createForm.document" class="mock-input" required />
+            <span>Documento (CNPJ)</span>
+            <input
+              v-model="createForm.document"
+              class="mock-input"
+              inputmode="numeric"
+              placeholder="00.000.000/0000-00"
+              required
+              @input="onDocumentInput"
+            />
           </label>
           <label class="mock-field">
             <span>E-mail</span>
@@ -152,7 +210,13 @@ const saveNewContractor = async () => {
           </label>
           <label class="mock-field">
             <span>Telefone</span>
-            <input v-model.trim="createForm.phone" class="mock-input" />
+            <input
+              v-model="createForm.phone"
+              class="mock-input"
+              inputmode="tel"
+              placeholder="(00) 00000-0000"
+              @input="onPhoneInput"
+            />
           </label>
         </div>
 
@@ -164,6 +228,13 @@ const saveNewContractor = async () => {
         </div>
       </form>
     </Transition>
+
+    <section class="panel-card filter-strip">
+      <div class="filter-strip__item">
+        <span>Período</span>
+        <AppPeriodSelector :disabled="pending" @change="applyContractorPeriod" />
+      </div>
+    </section>
 
     <section class="panel-card">
       <div class="section-toolbar">
@@ -187,7 +258,7 @@ const saveNewContractor = async () => {
         </div>
       </div>
 
-      <div v-if="!pending && !contractors.length" class="empty-state empty-state--panel">
+      <div v-if="!pending && !contractors.length" class="empty-state empty-state--void">
         <i class="pi pi-users" />
         <div>
           <strong>Nenhum contratante cadastrado ainda.</strong>
@@ -195,14 +266,14 @@ const saveNewContractor = async () => {
         </div>
       </div>
 
-      <div v-else-if="pending" class="empty-state empty-state--panel">
+      <div v-else-if="pending" class="empty-state empty-state--loading">
         <i class="pi pi-spin pi-spinner" />
         <div>
           <strong>Carregando contratantes...</strong>
         </div>
       </div>
 
-      <div v-else-if="isContractorSearchEmpty" class="empty-state">
+      <div v-else-if="isContractorSearchEmpty" class="empty-state empty-state--search">
         <i class="pi pi-search" />
         <div>
           <strong>Nenhum resultado para a busca.</strong>
@@ -210,25 +281,40 @@ const saveNewContractor = async () => {
         </div>
       </div>
 
-      <div v-else class="table-wrap">
-        <table class="app-data-table">
-          <thead>
-            <tr>
-              <th>Nome social</th>
-              <th>Documento</th>
-              <th>E-mail</th>
-              <th>Telefone</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="contractor in filteredContractors" :key="contractor.id">
-              <td>{{ contractor.legalName }}</td>
-              <td>{{ contractor.document }}</td>
-              <td>{{ contractor.email }}</td>
-              <td>{{ contractor.phone }}</td>
-            </tr>
-          </tbody>
-        </table>
+      <div v-else class="contractor-card-grid">
+        <article
+          v-for="contractor in filteredContractors"
+          :key="contractor.id"
+          class="contractor-card"
+        >
+          <div>
+            <p class="section-header__eyebrow">Contratante</p>
+            <h3>{{ contractor.legalName }}</h3>
+          </div>
+          <dl>
+            <div>
+              <dt>Documento</dt>
+              <dd>{{ contractor.document }}</dd>
+            </div>
+            <div>
+              <dt>E-mail</dt>
+              <dd>{{ contractor.email }}</dd>
+            </div>
+            <div>
+              <dt>Telefone</dt>
+              <dd>{{ contractor.phone }}</dd>
+            </div>
+          </dl>
+          <button
+            type="button"
+            class="table-action table-action--danger"
+            :disabled="deletingId === contractor.id"
+            @click="deleteContractor(contractor)"
+          >
+            <i class="pi pi-trash" />
+            <span>{{ deletingId === contractor.id ? "Removendo" : "Remover" }}</span>
+          </button>
+        </article>
       </div>
     </section>
   </AppPageShell>
@@ -263,14 +349,62 @@ const saveNewContractor = async () => {
   flex: 1;
 }
 
-.empty-state--panel {
-  border: 1px dashed rgba(20, 32, 19, 0.12);
-  border-radius: 1.25rem;
-  background: rgba(247, 250, 247, 0.65);
-  padding: 1.35rem 1.25rem;
+.table-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.58rem 0.8rem;
+  font-weight: 700;
 }
 
-.expand-fade-enter-active,
+.table-action--danger {
+  border-color: rgba(187, 52, 52, 0.14);
+  background: rgba(187, 52, 52, 0.08);
+  color: #ab3030;
+}
+
+.contractor-card-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.contractor-card {
+  display: grid;
+  gap: 1rem;
+  border: 1px solid rgba(20, 32, 19, 0.08);
+  border-radius: 1rem;
+  background: #fff;
+  padding: 1.1rem;
+}
+
+.contractor-card h3,
+.contractor-card dl,
+.contractor-card dd,
+.contractor-card p {
+  margin: 0;
+}
+
+.contractor-card dl {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.contractor-card dt {
+  color: var(--color-muted);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.contractor-card dd {
+  overflow-wrap: anywhere;
+}
+
 .expand-fade-leave-active {
   overflow: hidden;
   transition:
@@ -295,6 +429,7 @@ const saveNewContractor = async () => {
 
 @media (max-width: 900px) {
   .contractor-form-grid,
+  .contractor-card-grid,
   .table-search {
     grid-template-columns: 1fr;
     align-items: stretch;

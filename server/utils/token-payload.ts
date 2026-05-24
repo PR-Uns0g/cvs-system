@@ -28,11 +28,34 @@ export const readJwtPayload = (token?: string): JwtPayload | null => {
   }
 };
 
-export const getSessionUser = (token?: string) => {
+const nameFromEmail = (email?: string) => {
+  if (!email) {
+    return undefined;
+  }
+
+  const local = email.split("@")[0]?.replace(/[._-]+/g, " ").trim();
+  if (!local) {
+    return email;
+  }
+
+  return local.replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
+export const getSessionUser = (
+  token?: string,
+  fallback?: { email?: string; name?: string } | string,
+) => {
   const payload = readJwtPayload(token);
+  const fallbackEmail = typeof fallback === "string" ? fallback : fallback?.email;
+  const fallbackName = typeof fallback === "string" ? undefined : fallback?.name;
 
   if (!payload) {
-    return null;
+    return fallbackEmail || fallbackName
+      ? {
+          email: fallbackEmail,
+          name: fallbackName || nameFromEmail(fallbackEmail) || fallbackEmail,
+        }
+      : null;
   }
 
   const exp = payload.exp;
@@ -45,17 +68,17 @@ export const getSessionUser = (token?: string) => {
       ? payload.email
       : typeof payload.user_email === "string"
         ? payload.user_email
-        : undefined;
+        : fallbackEmail;
 
   const name =
     typeof payload.name === "string"
       ? payload.name
       : typeof payload.username === "string"
         ? payload.username
-        : email;
+        : fallbackName || nameFromEmail(email);
 
   return {
     email,
-    name: name || "Usuário autenticado",
+    name: name || email,
   };
 };

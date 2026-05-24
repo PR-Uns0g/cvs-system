@@ -1,5 +1,5 @@
 <script setup lang="ts">
-await navigateTo("/dashboard", { replace: true });
+await navigateTo("/login", { replace: true });
 </script>
 
 <template>

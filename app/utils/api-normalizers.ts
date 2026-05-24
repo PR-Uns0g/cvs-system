@@ -133,9 +133,9 @@ export const normalizeContractor = (item: unknown): Contractor => {
 
   return {
     id: readString(record, ["id", "uuid"], crypto.randomUUID()),
-    legalName: readString(record, ["nome_social", "razao_social", "nome", "legalName"], "Sem nome"),
+    legalName: readString(record, ["legalName", "nome_social", "razao_social", "nome"], "Sem nome"),
     document: formatDocumentoBr(
-      readString(record, ["documento", "cpf_cnpj", "cnpj", "document"], "-"),
+      readString(record, ["document", "documento", "cpf_cnpj", "cnpj"], "-"),
     ),
     email: readString(record, ["email"], "-"),
     phone: readString(record, ["telefone", "phone"], "-"),
@@ -172,6 +172,26 @@ const statusTone = (status: string): LaunchEntry["statusTone"] => {
   return "neutral";
 };
 
+export const readLaunchContractorId = (record: Record<string, unknown>): string | null => {
+  const contratanteRaw = record.contratante;
+
+  if (
+    contratanteRaw &&
+    typeof contratanteRaw === "object" &&
+    !Array.isArray(contratanteRaw)
+  ) {
+    const id = readString(contratanteRaw as Record<string, unknown>, ["id", "uuid"], "");
+    return id || null;
+  }
+
+  if (contratanteRaw != null && contratanteRaw !== "") {
+    return String(contratanteRaw);
+  }
+
+  const fallback = record.contratante_id;
+  return fallback != null && fallback !== "" ? String(fallback) : null;
+};
+
 export const normalizeLaunch = (
   item: unknown,
   contractorNamesById: Record<string, string> = {},
@@ -191,9 +211,21 @@ export const normalizeLaunch = (
   } else if (contratanteRaw != null && contratanteRaw !== "") {
     const idKey = String(contratanteRaw);
     contractor = contractorNamesById[idKey] || idKey;
+  } else {
+    const contractorId = readLaunchContractorId(record);
+    if (contractorId) {
+      contractor = contractorNamesById[contractorId] || contractorId;
+    } else {
+      contractor = readString(record, ["contratante_nome", "contractor"], "Sem contratante");
+    }
   }
 
-  const rawDate = record.data_lancamento ?? record.data ?? record.date ?? record.created_at;
+  const rawDate =
+    record.data_emissao ??
+    record.data_lancamento ??
+    record.data ??
+    record.date ??
+    record.created_at;
   const date =
     typeof rawDate === "string" || typeof rawDate === "number"
       ? formatDateTime(rawDate)
@@ -212,7 +244,11 @@ export const normalizeLaunch = (
   const taxesTotalNumber = Number.isFinite(taxesNumeric) ? taxesNumeric : 0;
   const myRevenueNumber =
     parseMoneyNumber(
-      record.valor_nf ?? record.meu_faturamento ?? record.comissao ?? record.myRevenue,
+      record.valor_nf ??
+        record.users_revenue_total ??
+        record.meu_faturamento ??
+        record.comissao ??
+        record.myRevenue,
     ) ?? 0;
 
   return {
@@ -229,7 +265,11 @@ export const normalizeLaunch = (
     taxesTotalNumber,
     myRevenueNumber,
     myRevenue: formatCurrency(
-      record.valor_nf ?? record.meu_faturamento ?? record.comissao ?? record.myRevenue,
+      record.valor_nf ??
+        record.users_revenue_total ??
+        record.meu_faturamento ??
+        record.comissao ??
+        record.myRevenue,
     ),
     status,
     statusTone: statusTone(status),
@@ -248,11 +288,22 @@ export const normalizeDashboard = (payload: unknown): DashboardSummary => {
 
   return {
     contractorRevenue: formatCurrency(
-      record.receita_contratante || record.total_faturamento || record.contractorRevenue,
+      record.contratantes_revenue_total ||
+        record.receita_contratante ||
+        record.total_faturamento ||
+        record.contractorRevenue,
     ),
-    myRevenue: formatCurrency(record.meu_faturamento || record.comissao || record.myRevenue),
-    commissionRatio: Number(record.percentual_comissao || record.commissionRatio || 0),
-    entriesCount: readString(record, ["quantidade_lancamentos", "lancamentos", "entriesCount"], "0"),
+    myRevenue: formatCurrency(
+      record.users_revenue_total || record.meu_faturamento || record.comissao || record.myRevenue,
+    ),
+    commissionRatio: Number(
+      record.avg_comissao_pct || record.percentual_comissao || record.commissionRatio || 0,
+    ),
+    entriesCount: readString(
+      record,
+      ["lancamentos_count", "quantidade_lancamentos", "lancamentos", "entriesCount"],
+      "0",
+    ),
     updatedAt,
   };
 };
