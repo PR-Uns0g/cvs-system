@@ -5,7 +5,7 @@ useHead({
   title: "LanÃ§amento manual | CVS System",
 });
 
-const { data: contractorsPayload } = await useFetch("/api/contratantes", {
+const { data: contractorsPayload } = await useApiFetch("/api/contratantes", {
   key: "manual-launch-contractors",
 });
 
@@ -71,7 +71,7 @@ const saveManualLaunch = async () => {
   isSaving.value = true;
 
   try {
-    await $fetch("/api/lancamentos/manual", {
+    await useRequestFetch()("/api/lancamentos/manual", {
       method: "POST",
       body: {
         contratante_id: Number(form.contractorId),

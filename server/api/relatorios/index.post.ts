@@ -1,12 +1,11 @@
 import { upstreamRoutes } from "../../utils/api-routes";
-import { upstreamFetch } from "../../utils/upstream-fetch";
+import { upstreamFetchSpreadsheet } from "../../utils/upstream-spreadsheet";
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event);
-  const content = await upstreamFetch<ArrayBuffer>(event, upstreamRoutes.reports, {
+  const content = await upstreamFetchSpreadsheet(event, upstreamRoutes.reports, {
     method: "POST",
     body,
-    responseType: "arrayBuffer",
   });
 
   setHeader(
@@ -16,5 +15,5 @@ export default defineEventHandler(async (event) => {
   );
   setHeader(event, "content-disposition", 'attachment; filename="relatorio.xlsx"');
 
-  return content;
+  return Buffer.from(content);
 });

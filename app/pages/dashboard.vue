@@ -19,21 +19,21 @@ const commissionRatioFormatter = new Intl.NumberFormat("pt-BR", {
 const periodQuery = ref<Record<string, string>>({});
 const selectedContractorId = ref("");
 
-const { data: dashboardPayload, pending: dashboardPending } = await useFetch(
+const { data: dashboardPayload, pending: dashboardPending } = await useApiFetch(
   "/api/dashboard",
   {
     key: "dashboard-summary",
     query: periodQuery,
   },
 );
-const { data: launchesPayload, pending: launchesPending } = await useFetch(
+const { data: launchesPayload, pending: launchesPending } = await useApiFetch(
   "/api/lancamentos",
   {
     key: "dashboard-launches",
     query: periodQuery,
   },
 );
-const { data: contractorsPayload } = await useFetch("/api/contratantes", {
+const { data: contractorsPayload } = await useApiFetch("/api/contratantes", {
   key: "dashboard-contractors",
 });
 

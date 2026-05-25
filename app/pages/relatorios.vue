@@ -9,7 +9,7 @@ useHead({
   title: "Relatórios | CVS System",
 });
 
-const { data: contractorsPayload } = await useFetch("/api/contratantes", {
+const { data: contractorsPayload } = await useApiFetch("/api/contratantes", {
   key: "report-contractors",
 });
 
@@ -121,7 +121,7 @@ const generateReport = async () => {
   isGenerating.value = true;
 
   try {
-    const blob = await $fetch<Blob>("/api/relatorios", {
+    const blob = await useRequestFetch()<Blob>("/api/relatorios", {
       method: "POST",
       responseType: "blob",
       body: reportPostBody.value,
@@ -139,10 +139,7 @@ const generateReport = async () => {
   } catch (error: unknown) {
     feedback.value = {
       tone: "danger",
-      message:
-        error && typeof error === "object" && "statusMessage" in error
-          ? String(error.statusMessage)
-          : "Não foi possível gerar o relatório.",
+      message: readApiErrorMessage(error, "Não foi possível gerar o relatório."),
     };
   } finally {
     isGenerating.value = false;
@@ -154,7 +151,7 @@ const generateReport = async () => {
   <AppPageShell
     eyebrow="Configuração"
     title="Relatórios"
-    subtitle="O relatório é montado pela API e baixado como XLSX."
+    subtitle="O relatório é gerado pela API Django e baixado como XLSX."
   >
     <section class="panel-card report-notice">
       <i class="pi pi-info-circle" />

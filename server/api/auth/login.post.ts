@@ -1,5 +1,6 @@
 import { setAuthCookies, setAuthUserHint } from "../../utils/auth-cookies";
 import { joinApiUrl, upstreamRoutes } from "../../utils/api-routes";
+import { getConnectionErrorCode } from "../../utils/upstream-error";
 import { getSessionUser } from "../../utils/token-payload";
 import type { ApiUser } from "~/types/api";
 
@@ -41,13 +42,17 @@ export default defineEventHandler(async (event) => {
       "statusCode" in error &&
       error.statusCode === 401
     ) {
-      setResponseStatus(event, 401, "E-mail ou senha invÃ¡lidos.");
+      setResponseStatus(event, 401, "E-mail ou senha inválidos.");
       return {
         user: null,
       };
     }
 
-    setResponseStatus(event, 502, "NÃ£o foi possÃ­vel conectar Ã  API de autenticaÃ§Ã£o.");
+    const statusMessage = getConnectionErrorCode(error)
+      ? "Backend indisponível. Inicie o servidor Django na porta 8000."
+      : "Não foi possível conectar à API de autenticação.";
+
+    setResponseStatus(event, getConnectionErrorCode(error) ? 503 : 502, statusMessage);
     return {
       user: null,
     };

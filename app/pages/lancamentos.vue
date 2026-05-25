@@ -11,11 +11,11 @@ const {
   data: launchesPayload,
   pending,
   refresh,
-} = await useFetch("/api/lancamentos", {
+} = await useApiFetch("/api/lancamentos", {
   key: "launches",
   query: launchesQuery,
 });
-const { data: contractorsPayload } = await useFetch("/api/contratantes", {
+const { data: contractorsPayload } = await useApiFetch("/api/contratantes", {
   key: "launch-contractors",
 });
 
@@ -184,7 +184,7 @@ const saveCreateEntry = async () => {
     formData.append("arquivo", selectedFile.value);
     formData.append("faturamento_contratante", revenue);
 
-    await $fetch("/api/lancamentos/importar-xml", {
+    await useRequestFetch()("/api/lancamentos/importar-xml", {
       method: "POST",
       body: formData,
     });
@@ -200,10 +200,7 @@ const saveCreateEntry = async () => {
   } catch (error: unknown) {
     feedback.value = {
       tone: "danger",
-      message:
-        error && typeof error === "object" && "statusMessage" in error
-          ? String(error.statusMessage)
-          : "Não foi possível importar o XML.",
+      message: readApiErrorMessage(error, "Não foi possível importar o XML."),
     };
   } finally {
     isUploading.value = false;
@@ -239,7 +236,7 @@ const saveManualEntry = async () => {
   isSavingManual.value = true;
 
   try {
-    await $fetch("/api/lancamentos/manual", {
+    await useRequestFetch()("/api/lancamentos/manual", {
       method: "POST",
       body: {
         contratante_id: Number(manualForm.contractorId),
@@ -261,10 +258,10 @@ const saveManualEntry = async () => {
   } catch (error: unknown) {
     feedback.value = {
       tone: "danger",
-      message:
-        error && typeof error === "object" && "statusMessage" in error
-          ? String(error.statusMessage)
-          : "Não foi possível cadastrar o lançamento manual.",
+      message: readApiErrorMessage(
+        error,
+        "Não foi possível cadastrar o lançamento manual.",
+      ),
     };
   } finally {
     isSavingManual.value = false;
@@ -291,7 +288,7 @@ const deleteEntry = async (entry: LaunchEntry) => {
   deletingId.value = entry.id;
 
   try {
-    await $fetch(`/api/lancamentos/${entry.id}`, {
+    await useRequestFetch()(`/api/lancamentos/${entry.id}`, {
       method: "DELETE",
     });
     if (expandedTaxesId.value === entry.id) {

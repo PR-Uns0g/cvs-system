@@ -10,10 +10,13 @@ const props = withDefaults(
   defineProps<{
     disabled?: boolean;
     initialOption?: PeriodOption;
+    /** When false, period is only sent after the user changes the selector (e.g. contratantes list-all). */
+    emitOnMount?: boolean;
   }>(),
   {
     disabled: false,
     initialOption: "30",
+    emitOnMount: true,
   },
 );
 
@@ -33,12 +36,19 @@ const option = ref<PeriodOption>(props.initialOption);
 const isCustomOpen = ref(false);
 const rootRef = ref<HTMLElement | null>(null);
 
-const todayKey = () => new Date().toISOString().slice(0, 10);
+const toLocalDateKey = (date: Date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
+
+const todayKey = () => toLocalDateKey(new Date());
 
 const daysAgoKey = (days: number) => {
   const date = new Date();
   date.setDate(date.getDate() - days + 1);
-  return date.toISOString().slice(0, 10);
+  return toLocalDateKey(date);
 };
 
 const parseDateKey = (value: string) => {
@@ -120,7 +130,7 @@ const onDocumentPointerDown = (event: PointerEvent) => {
 };
 
 onMounted(() => {
-  if (option.value !== "custom") {
+  if (props.emitOnMount && option.value !== "custom") {
     emitPreset(Number(option.value));
   }
   document.addEventListener("pointerdown", onDocumentPointerDown);

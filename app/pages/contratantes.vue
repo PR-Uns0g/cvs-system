@@ -8,7 +8,7 @@ useHead({
 
 const contractorQuery = ref<Record<string, string>>({});
 
-const { data, pending, refresh } = await useFetch("/api/contratantes", {
+const { data, pending, refresh } = await useApiFetch("/api/contratantes", {
   key: "contractors",
   query: contractorQuery,
 });
@@ -92,7 +92,7 @@ const saveNewContractor = async () => {
   isSaving.value = true;
 
   try {
-    await $fetch("/api/contratantes", {
+    await useRequestFetch()("/api/contratantes", {
       method: "POST",
       body: {
         legalName: createForm.legalName,
@@ -126,7 +126,7 @@ const deleteContractor = async (contractor: Contractor) => {
   deletingId.value = contractor.id;
 
   try {
-    await $fetch(`/api/contratantes/${contractor.id}`, {
+    await useRequestFetch()(`/api/contratantes/${contractor.id}`, {
       method: "DELETE",
     });
     feedback.value = {
@@ -232,7 +232,15 @@ const deleteContractor = async (contractor: Contractor) => {
     <section class="panel-card filter-strip">
       <div class="filter-strip__item">
         <span>Período</span>
-        <AppPeriodSelector :disabled="pending" @change="applyContractorPeriod" />
+        <AppPeriodSelector
+          :disabled="pending"
+          :emit-on-mount="false"
+          @change="applyContractorPeriod"
+        />
+        <p class="period-hint">
+          Sem período selecionado, todos os contratantes vinculados são listados. Com período,
+          aparecem só os que tiveram lançamento no intervalo.
+        </p>
       </div>
     </section>
 
@@ -403,6 +411,14 @@ const deleteContractor = async (contractor: Contractor) => {
 
 .contractor-card dd {
   overflow-wrap: anywhere;
+}
+
+.period-hint {
+  margin: 0.35rem 0 0;
+  color: var(--color-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  max-width: 42rem;
 }
 
 .expand-fade-leave-active {

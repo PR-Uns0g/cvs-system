@@ -1,26 +1,20 @@
 export default defineNuxtRouteMiddleware(async (to) => {
   const publicRoutes = new Set(["/login", "/admin"]);
-  const { user, fetchSession } = useAuth();
+  const { user, authChecked, fetchSession } = useAuth();
 
-  if (publicRoutes.has(to.path)) {
-    if (!user.value) {
-      const sessionUser = await fetchSession();
-
-      if (!sessionUser) {
-        return;
-      }
-    }
-
-    return navigateTo("/dashboard");
+  if (!authChecked.value) {
+    await fetchSession();
   }
 
-  if (user.value) {
+  if (publicRoutes.has(to.path)) {
+    if (user.value) {
+      return navigateTo("/dashboard");
+    }
+
     return;
   }
 
-  const sessionUser = await fetchSession();
-
-  if (!sessionUser) {
+  if (!user.value) {
     return navigateTo({
       path: "/login",
       query: { redirect: to.fullPath },

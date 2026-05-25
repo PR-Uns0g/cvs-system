@@ -1,7 +1,8 @@
 import type { H3Event } from "h3";
 import { getAccessToken } from "./auth-cookies";
-import { joinApiUrl, upstreamRoutes } from "./api-routes";
+import { joinApiUrl } from "./api-routes";
 import { refreshUpstreamAccess } from "./refresh-upstream-access";
+import { rethrowUpstreamFetchError } from "./upstream-error";
 
 type FetchOptions = Parameters<typeof $fetch>[1] & {
   authenticated?: boolean;
@@ -33,9 +34,19 @@ export const upstreamFetch = async <T>(
     requestHeaders.set("Authorization", `Bearer ${access}`);
   }
 
+  const apiBase = getBaseUrl();
+  const requestUrl = joinApiUrl(apiBase, path);
+  const { body, ...restFetchOptions } = fetchOptions;
+
+  if (body instanceof FormData) {
+    requestHeaders.delete("content-type");
+    requestHeaders.delete("Content-Type");
+  }
+
   try {
-    return await $fetch<T>(joinApiUrl(getBaseUrl(), path), {
-      ...fetchOptions,
+    return await $fetch<T>(requestUrl, {
+      ...restFetchOptions,
+      body,
       headers: requestHeaders,
     });
   } catch (error: unknown) {
@@ -51,13 +62,18 @@ export const upstreamFetch = async <T>(
       if (refreshedAccess) {
         requestHeaders.set("Authorization", `Bearer ${refreshedAccess}`);
 
-        return await $fetch<T>(joinApiUrl(getBaseUrl(), path), {
-          ...fetchOptions,
-          headers: requestHeaders,
-        });
+        try {
+          return await $fetch<T>(requestUrl, {
+            ...restFetchOptions,
+            body,
+            headers: requestHeaders,
+          });
+        } catch (retryError: unknown) {
+          rethrowUpstreamFetchError(retryError, apiBase);
+        }
       }
     }
 
-    throw error;
+    rethrowUpstreamFetchError(error, apiBase);
   }
 };

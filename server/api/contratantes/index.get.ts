@@ -1,8 +1,11 @@
 import { upstreamRoutes } from "../../utils/api-routes";
 import { upstreamFetch } from "../../utils/upstream-fetch";
+import { unwrapUpstreamList } from "../../utils/upstream-list";
 
-export default defineEventHandler((event) =>
-  upstreamFetch(event, upstreamRoutes.contractors, {
+export default defineEventHandler(async (event) => {
+  const payload = await upstreamFetch<unknown>(event, upstreamRoutes.contractors, {
     query: getQuery(event),
-  }),
-);
+  });
+
+  return unwrapUpstreamList(payload);
+});
