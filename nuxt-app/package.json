@@ -1,0 +1,32 @@
+{
+  "name": "cvs_frontend",
+  "version": "0.0.1-alpha",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@fontsource-variable/manrope": "^5.2.8",
+    "@primeuix/themes": "^2.0.3",
+    "@primevue/nuxt-module": "^4.5.4",
+    "chart.js": "^4.5.1",
+    "nuxt": "^4.4.2",
+    "primeicons": "^7.0.0",
+    "primevue": "^4.5.4",
+    "vue": "^3.5.30",
+    "vue-router": "^5.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "@vue/language-core": "^3.2.6",
+    "vue-tsc": "^3.2.6"
+  }
+}
