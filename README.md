@@ -26,3 +26,11 @@ Open the service interfaces at:
 - MinIO Console: `http://localhost:9001` (API: `http://localhost:9002`)
 - PostgreSQL: connect to `localhost:5432` with a database client, or run
   `docker compose -f infra/docker-compose.yml exec postgres psql -U cvs_system -d cvs_system`
+
+### Authentication
+
+- Create an account at `http://localhost:3000/auth/register`. Kratos collects the profile and password in its browser flow.
+- Sign in at `http://localhost:3000/auth/login`; after successful login, Kratos returns the user to the dashboard.
+- Use **Sair** in the sidebar to end the session. Unauthenticated visits to application pages redirect to login.
+
+Kratos manages the browser session cookie. The local Compose configuration uses `localhost` URLs; production deployments must set the app and Kratos browser URLs to their public HTTPS origins.

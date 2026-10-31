@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { KratosBrowserFlow } from "~/types/kratos";
+
 definePageMeta({
   layout: "auth",
 });
@@ -6,23 +8,26 @@ definePageMeta({
 useHead({
   title: "Entrar | CVS System",
 });
+
+const config = useRuntimeConfig();
+const route = useRoute();
+const flowId = typeof route.query.flow === "string" ? route.query.flow : "";
+
+if (!flowId) {
+  const browserUrl = config.public.kratosBrowserUrl.replace(/\/$/, "");
+  await navigateTo(`${browserUrl}/self-service/login/browser`, {
+    external: true,
+    redirectCode: 303,
+  });
+}
+
+const { data: flow, error } = await useFetch<KratosBrowserFlow>("/api/auth/flow", {
+  query: { type: "login", id: flowId },
+  key: `kratos-login-${flowId || "new"}`,
+  immediate: Boolean(flowId),
+});
 </script>
 
 <template>
-  <section class="login-page">
-    <div class="login-card">
-      <div class="login-card__brand">
-        <AppBrandMark />
-        <div>
-          <strong>CVS System</strong>
-          <p>Clareza para acompanhar notas, faturamento e relatórios sem fricção.</p>
-        </div>
-      </div>
-
-      <div class="login-card__header">
-        <h1>Entrar</h1>
-        <p>O fluxo de login do Kratos será conectado aqui.</p>
-      </div>
-    </div>
-  </section>
+  <AuthFlowForm :flow="flow ?? null" :flow-error="Boolean(error)" mode="login" />
 </template>

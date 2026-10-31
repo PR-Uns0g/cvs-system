@@ -675,6 +675,27 @@ button[disabled] {
   width: 100%;
 }
 
+.auth-switch {
+  margin: 0;
+  color: var(--color-muted);
+  text-align: center;
+}
+
+.auth-switch a {
+  color: var(--color-brand-strong);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.auth-retry {
+  color: var(--color-brand-strong);
+  font-weight: 700;
+  text-align: center;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
 .form-feedback {
   margin: 0;
   border-radius: 1rem;

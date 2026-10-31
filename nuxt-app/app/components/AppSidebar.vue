@@ -96,9 +96,16 @@ const isActiveRoute = (to: string) => {
 
           <span class="app-user-trigger__copy">
             <strong>CVS System</strong>
-            <small>Frontend visual</small>
+            <small>Conta autenticada</small>
           </span>
         </div>
+
+        <form method="post" action="/api/auth/logout">
+          <button type="submit" class="app-logout-button">
+            <i class="pi pi-sign-out" />
+            <span>Sair</span>
+          </button>
+        </form>
       </div>
     </div>
   </aside>
@@ -291,6 +298,21 @@ const isActiveRoute = (to: string) => {
   line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.app-logout-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  border: 0;
+  background: transparent;
+  color: var(--color-muted);
+  font-weight: 700;
+  padding: 0.75rem 0.25rem 0;
+}
+
+.app-logout-button:hover {
+  color: var(--color-brand-strong);
 }
 
 @media (max-width: 1100px) {
