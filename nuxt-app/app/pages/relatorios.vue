@@ -9,7 +9,7 @@ useHead({ title: "Relatórios | CVS System" });
 
 const contractorOptions = ref<SelectableOption[]>([]);
 const fieldOptions: SelectableOption[] = [
-  { id: "contratantes_revenue", label: "Receita do contratante", helper: "Valor informado no lançamento." },
+  { id: "contratantes_revenue", label: "Receita dos contratantes", helper: "Valor informado no lançamento." },
   { id: "users_revenue", label: "Valor da NF", helper: "Valor dos serviços na nota." },
   { id: "impostos_amount", label: "Impostos", helper: "Total e detalhe dos tributos." },
 ];

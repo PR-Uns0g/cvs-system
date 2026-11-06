@@ -9,19 +9,37 @@ const props = defineProps<{
 
 const isRegistration = computed(() => props.mode === "registration");
 const title = computed(() => isRegistration.value ? "Criar conta" : "Entrar");
-const submitLabel = computed(() => isRegistration.value ? "Criar conta" : "Entrar");
+const submitLabel = (node: KratosUiNode) => {
+  if (node.attributes.name === "screen" && node.attributes.value === "previous") {
+    return "Voltar para editar dados";
+  }
+
+  return isRegistration.value ? "Cadastre-se" : "Entre com sua conta";
+};
+const isPreviousStep = (node: KratosUiNode) =>
+  node.attributes.name === "screen" && node.attributes.value === "previous";
 
 const fieldLabel = (node: KratosUiNode) => {
+  const labels: Record<string, string> = {
+    "traits.email": "E-mail",
+    "traits.fullName": "Nome completo",
+    "traits.name": "Nome",
+    identifier: "E-mail",
+    password: "Senha",
+  };
+  const appLabel = labels[node.attributes.name];
+  if (appLabel) {
+    return appLabel;
+  }
+
+  if (node.attributes.type === "password") {
+    return "Senha";
+  }
+
   if (node.meta?.label?.text) {
     return node.meta.label.text;
   }
 
-  const labels: Record<string, string> = {
-    "traits.email": "E-mail",
-    "traits.fullName": "Nome completo",
-    password: "Senha",
-    identifier: "E-mail",
-  };
   return labels[node.attributes.name] ?? node.attributes.name;
 };
 </script>
@@ -113,12 +131,17 @@ const fieldLabel = (node: KratosUiNode) => {
           <button
             v-else-if="node.type === 'input' && node.attributes.type === 'submit'"
             type="submit"
-            class="page-shell__cta login-form__submit"
+            :class="[
+              'page-shell__cta',
+              'login-form__submit',
+              { 'page-shell__cta--danger': isPreviousStep(node) },
+            ]"
             :name="node.attributes.name"
             :value="node.attributes.value"
             :disabled="node.attributes.disabled"
+            :formnovalidate="isPreviousStep(node)"
           >
-            <span>{{ node.meta?.label?.text ?? submitLabel }}</span>
+            <span>{{ submitLabel(node) }}</span>
           </button>
         </template>
       </form>

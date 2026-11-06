@@ -28,9 +28,16 @@ export default defineEventHandler(async (event) => {
   }
 
   const session = response._data;
-  if (!session.active) {
+  if (!session.active || !session.identity) {
     return { authenticated: false };
   }
 
-  return { authenticated: true };
+  const traits = session.identity.traits;
+  return {
+    authenticated: true,
+    user: {
+      fullName: typeof traits?.fullName === "string" ? traits.fullName : null,
+      email: typeof traits?.email === "string" ? traits.email : null,
+    },
+  };
 });

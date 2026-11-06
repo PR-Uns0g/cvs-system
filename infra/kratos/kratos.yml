@@ -16,6 +16,8 @@ selfservice:
     password:
       enabled: true
   flows:
+    error:
+      ui_url: http://localhost:3000/auth/error
     logout:
       after:
         default_browser_return_url: http://localhost:3000/auth/login

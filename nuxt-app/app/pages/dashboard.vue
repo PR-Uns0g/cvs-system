@@ -82,7 +82,7 @@ const chartOptions = { responsive: true, maintainAspectRatio: false };
 
     <section class="panel-grid panel-grid--stats">
       <AppStatCard
-        label="Receita do Contratante"
+        label="Receita dos Contratantes"
         :value="
           isDashboardPending ? 'Carregando...' : dashboard.contractorRevenue
         "
@@ -211,7 +211,7 @@ const chartOptions = { responsive: true, maintainAspectRatio: false };
             <tr>
               <th>Data</th>
               <th>Contratante</th>
-              <th>Receita do Contratante</th>
+              <th>Receita dos Contratantes</th>
               <th>Meu Faturamento</th>
               <th>Status</th>
             </tr>

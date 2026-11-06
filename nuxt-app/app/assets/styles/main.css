@@ -696,6 +696,12 @@ button[disabled] {
   text-underline-offset: 0.18em;
 }
 
+.auth-error-actions {
+  display: grid;
+  justify-items: center;
+  gap: 1rem;
+}
+
 .form-feedback {
   margin: 0;
   border-radius: 1rem;

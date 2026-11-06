@@ -37,8 +37,33 @@ export interface KratosBrowserFlow {
 
 export interface KratosSession {
   active: boolean;
+  identity?: {
+    traits?: {
+      email?: unknown;
+      fullName?: unknown;
+    };
+  };
+}
+
+export interface AuthSessionResponse {
+  authenticated: boolean;
+  user?: {
+    fullName: string | null;
+    email: string | null;
+  };
 }
 
 export interface KratosLogoutFlow {
   logout_url: string;
+}
+
+export interface KratosError {
+  error?: {
+    code?: number;
+    status?: string;
+    reason?: string;
+    message?: string;
+  };
+  code?: number;
+  message?: string;
 }

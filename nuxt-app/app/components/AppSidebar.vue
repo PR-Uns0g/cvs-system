@@ -1,8 +1,17 @@
 <script setup lang="ts">
 import packageJson from "../../package.json";
+import type { AuthSessionResponse } from "~/types/kratos";
 
 const route = useRoute();
 const isMenuOpen = ref(false);
+const isAccountMenuOpen = ref(false);
+const accountMenu = ref<HTMLElement | null>(null);
+const authSession = useState<AuthSessionResponse>("auth-session", () => ({
+  authenticated: false,
+}));
+const accountName = computed(() => authSession.value.user?.fullName || "Usuário");
+const accountEmail = computed(() => authSession.value.user?.email || "");
+const accountInitial = computed(() => accountName.value.trim().charAt(0).toLocaleUpperCase());
 
 const navigationItems = [
   {
@@ -35,7 +44,34 @@ const appVersion = packageJson.version ?? "0.1.0";
 
 const closeMenu = () => {
   isMenuOpen.value = false;
+  isAccountMenuOpen.value = false;
 };
+
+const handleDocumentClick = (event: MouseEvent) => {
+  if (event.target instanceof Node && !accountMenu.value?.contains(event.target)) {
+    isAccountMenuOpen.value = false;
+  }
+};
+
+const handleEscape = (event: KeyboardEvent) => {
+  if (event.key === "Escape" && isAccountMenuOpen.value) {
+    isAccountMenuOpen.value = false;
+  }
+};
+
+onMounted(() => {
+  document.addEventListener("click", handleDocumentClick);
+  document.addEventListener("keydown", handleEscape);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener("click", handleDocumentClick);
+  document.removeEventListener("keydown", handleEscape);
+});
+
+watch(() => route.fullPath, () => {
+  closeMenu();
+});
 
 const isActiveRoute = (to: string) => {
   if (to === "/dashboard") {
@@ -88,24 +124,44 @@ const isActiveRoute = (to: string) => {
         </NuxtLink>
       </nav>
 
-      <div class="app-user-menu">
-        <div class="app-user-trigger">
-          <span class="app-user-trigger__avatar">
-            <i class="pi pi-desktop" />
+      <div ref="accountMenu" class="app-user-menu">
+        <button
+          type="button"
+          class="app-user-trigger"
+          aria-label="Abrir opções da conta"
+          aria-haspopup="true"
+          :aria-expanded="isAccountMenuOpen"
+          aria-controls="app-account-menu"
+          @click="isAccountMenuOpen = !isAccountMenuOpen"
+        >
+          <span class="app-user-trigger__avatar" aria-hidden="true">
+            {{ accountInitial }}
           </span>
 
           <span class="app-user-trigger__copy">
-            <strong>CVS System</strong>
-            <small>Conta autenticada</small>
+            <strong>{{ accountName }}</strong>
+            <small>{{ accountEmail }}</small>
           </span>
-        </div>
+        </button>
 
-        <form method="post" action="/api/auth/logout">
-          <button type="submit" class="app-logout-button">
-            <i class="pi pi-sign-out" />
-            <span>Sair</span>
-          </button>
-        </form>
+        <div
+          v-if="isAccountMenuOpen"
+          id="app-account-menu"
+          class="app-account-popover"
+          aria-label="Opções da conta"
+        >
+          <NuxtLink to="/settings" class="app-account-popover__item" @click="closeMenu">
+            <i class="pi pi-cog" aria-hidden="true" />
+            <span>Configurações</span>
+          </NuxtLink>
+
+          <form method="post" action="/api/auth/logout">
+            <button type="submit" class="app-account-popover__item app-account-popover__item--logout">
+              <i class="pi pi-sign-out" aria-hidden="true" />
+              <span>Sair</span>
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   </aside>
@@ -139,6 +195,9 @@ const isActiveRoute = (to: string) => {
   position: sticky;
   top: 0;
   height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  align-self: start;
   padding: 1.5rem 0 1.5rem 1.5rem;
 }
 
@@ -192,12 +251,17 @@ const isActiveRoute = (to: string) => {
 .app-nav {
   display: flex;
   flex: 1;
+  min-height: 0;
   flex-direction: column;
   gap: 0.65rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
 }
 
 .app-nav__link {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: 0.95rem;
   border: 1px solid transparent;
@@ -211,7 +275,7 @@ const isActiveRoute = (to: string) => {
 }
 
 .app-nav__link:hover {
-  transform: translateX(2px);
+  transform: translateX(-2px);
   border-color: rgba(47, 122, 79, 0.12);
   background: rgba(47, 122, 79, 0.05);
 }
@@ -258,26 +322,45 @@ const isActiveRoute = (to: string) => {
 .app-user-menu {
   position: relative;
   margin-top: auto;
+  flex: 0 0 auto;
 }
 
 .app-user-trigger {
   display: flex;
+  width: 100%;
+  min-width: 0;
   align-items: center;
   gap: 0.85rem;
   border: 1px solid rgba(20, 32, 19, 0.08);
   border-radius: 1.4rem;
   background: rgba(255, 255, 255, 0.88);
+  color: inherit;
+  cursor: pointer;
   padding: 0.85rem 0.95rem;
+  text-align: left;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.app-user-trigger:hover,
+.app-user-trigger[aria-expanded="true"] {
+  border-color: rgba(47, 122, 79, 0.2);
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(20, 32, 19, 0.08);
 }
 
 .app-user-trigger__avatar {
   display: grid;
   width: 2.8rem;
   height: 2.8rem;
+  flex: 0 0 auto;
   place-items: center;
   border-radius: 1rem;
   background: linear-gradient(180deg, #152318, #203826);
   color: #fff;
+  font-weight: 800;
 }
 
 .app-user-trigger__copy {
@@ -288,7 +371,10 @@ const isActiveRoute = (to: string) => {
 }
 
 .app-user-trigger__copy strong {
+  overflow: hidden;
   font-size: 0.92rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .app-user-trigger__copy small {
@@ -300,19 +386,52 @@ const isActiveRoute = (to: string) => {
   white-space: nowrap;
 }
 
-.app-logout-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  border: 0;
-  background: transparent;
-  color: var(--color-muted);
-  font-weight: 700;
-  padding: 0.75rem 0.25rem 0;
+.app-account-popover {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 0.75rem);
+  left: 0;
+  z-index: 70;
+  display: grid;
+  gap: 0.25rem;
+  border: 1px solid rgba(20, 32, 19, 0.1);
+  border-radius: 1.1rem;
+  background: #fff;
+  box-shadow: 0 18px 40px rgba(20, 32, 19, 0.16);
+  padding: 0.45rem;
 }
 
-.app-logout-button:hover {
+.app-account-popover form {
+  margin: 0;
+}
+
+.app-account-popover__item {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.75rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 700;
+  padding: 0.8rem 0.85rem;
+  text-align: left;
+}
+
+.app-account-popover__item:hover {
+  background: rgba(47, 122, 79, 0.08);
   color: var(--color-brand-strong);
+}
+
+.app-account-popover__item--logout {
+  color: #ab3030;
+}
+
+.app-account-popover__item--logout:hover {
+  background: rgba(187, 52, 52, 0.08);
+  color: #8e2525;
 }
 
 @media (max-width: 1100px) {
@@ -326,6 +445,8 @@ const isActiveRoute = (to: string) => {
     inset: 0 auto 0 0;
     z-index: 50;
     width: min(22rem, calc(100vw - 1.25rem));
+    height: 100vh;
+    height: 100dvh;
     padding: 1rem;
     transform: translateX(-105%);
     transition: transform 0.28s ease;
@@ -337,6 +458,17 @@ const isActiveRoute = (to: string) => {
 
   .app-sidebar__surface {
     border-radius: 1.75rem;
+  }
+}
+
+@media (max-height: 700px) {
+  .app-sidebar__surface {
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .app-nav__link {
+    padding-block: 0.7rem;
   }
 }
 </style>
