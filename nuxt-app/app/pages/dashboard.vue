@@ -27,7 +27,7 @@ const selectedContractorLabel = computed(() =>
 const recentEntries = ref<LaunchEntry[]>([]);
 const launchCount = computed(() => recentEntries.value.length);
 const chartMetricDefs = [
-  { id: "contractor-revenue", label: "Receita do Contratante", color: "#2f7a4f" },
+  { id: "contractor-revenue", label: "Receita dos Contratantes", color: "#2f7a4f" },
   { id: "my-revenue", label: "Meu Faturamento", color: "#152318" },
   { id: "taxes", label: "Montante de Impostos", color: "#2563a6" },
 ] as const;

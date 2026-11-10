@@ -11,7 +11,7 @@ const isRegistration = computed(() => props.mode === "registration");
 const title = computed(() => isRegistration.value ? "Criar conta" : "Entrar");
 const submitLabel = (node: KratosUiNode) => {
   if (node.attributes.name === "screen" && node.attributes.value === "previous") {
-    return "Voltar para editar dados";
+    return "Voltar para editar";
   }
 
   return isRegistration.value ? "Cadastre-se" : "Entre com sua conta";
