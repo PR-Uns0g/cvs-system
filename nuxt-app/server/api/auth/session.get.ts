@@ -1,5 +1,16 @@
-import type { KratosSession } from "~/types/kratos";
+import { ensureAppUser } from "~~/server/utils/app-user";
 import { fetchKratos } from "~~/server/utils/kratos";
+
+interface KratosSession {
+  active: boolean;
+  identity?: {
+    id?: unknown;
+    traits?: {
+      email?: unknown;
+      fullName?: unknown;
+    };
+  };
+}
 
 export default defineEventHandler(async (event) => {
   setResponseHeader(event, "Cache-Control", "private, no-store");
@@ -32,6 +43,27 @@ export default defineEventHandler(async (event) => {
     return { authenticated: false };
   }
 
+  const identityId = session.identity.id;
+  if (typeof identityId !== "string" || !isUuid(identityId)) {
+    throw createError({
+      statusCode: 502,
+      statusMessage: "Kratos returned an invalid identity.",
+    });
+  }
+
+  try {
+    await ensureAppUser(identityId);
+  } catch (cause) {
+    console.error(
+      "Failed to provision an app user for an authenticated Kratos session.",
+      cause instanceof Error ? cause.name : "Unknown error",
+    );
+    throw createError({
+      statusCode: 503,
+      statusMessage: "Your application profile could not be initialized.",
+    });
+  }
+
   const traits = session.identity.traits;
   return {
     authenticated: true,
@@ -41,3 +73,7 @@ export default defineEventHandler(async (event) => {
     },
   };
 });
+
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+}

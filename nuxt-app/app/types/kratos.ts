@@ -35,16 +35,6 @@ export interface KratosBrowserFlow {
   };
 }
 
-export interface KratosSession {
-  active: boolean;
-  identity?: {
-    traits?: {
-      email?: unknown;
-      fullName?: unknown;
-    };
-  };
-}
-
 export interface AuthSessionResponse {
   authenticated: boolean;
   user?: {
