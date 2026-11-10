@@ -1,36 +1,44 @@
-# CVS System 
+# CVS System
 
-Currently being rewritten to hold the full stack of a sales representative. 
+CVS System is a Nuxt application in development for centralizing sales representatives' financial operations, including contractors, invoices, financial records, and reports.
 
-Will contain admin dashboard to add new representatives, users, passwords and accesses.
+## Stack
 
-The full API will be built inside Nuxt, with the stack specified below
+- Nuxt 4, Vue 3, TypeScript, and PrimeVue 4
+- PostgreSQL 18 and Prisma ORM 8 (release candidate)
+- Ory Kratos for authentication
+- MinIO for S3-compatible object storage
+- Chart.js 4
 
-## Initial Stack
+The app and Kratos use separate databases on the same PostgreSQL server.
+`app_users.id` is the UUID from the verified Kratos identity; the app keeps it
+server-side.
 
-- Nuxt 4 
-- PrimeVue 4 (UI component library)
-- Chart.js 4 (to build charts charts)
+## Quick start
 
-## Local infrastructure with Docker Compose
+Requirements: Docker Engine and Docker Compose.
 
-From the project root, start Nuxt and its local services with:
+1. Configure the ignored `infra/.env` file. See the [setup guide](./docs/setup.md).
+2. Start the services from the repository root:
 
-```bash
-docker compose -f infra/docker-compose.yml up --build
-```
+   ```sh
+   docker compose --env-file infra/.env -f infra/docker-compose.yml up --build -d
+   ```
 
-Open the service interfaces at:
+3. Initialize/apply the app database migration:
 
-- Nuxt: `http://localhost:3000`
-- MinIO Console: `http://localhost:9001` (API: `http://localhost:9002`)
-- PostgreSQL: connect to `localhost:5432` with a database client, or run
-  `docker compose -f infra/docker-compose.yml exec postgres psql -U cvs_system -d cvs_system`
+   ```sh
+   docker compose --env-file infra/.env -f infra/docker-compose.yml run --rm nuxt-app \
+     npm run db:migrate:dev
+   ```
 
-### Authentication
+4. Open <http://localhost:3000>.
 
-- Create an account at `http://localhost:3000/auth/register`. Kratos collects the profile and password in its browser flow.
-- Sign in at `http://localhost:3000/auth/login`; after successful login, Kratos returns the user to the dashboard.
-- Use **Sair** in the sidebar to end the session. Unauthenticated visits to application pages redirect to login.
+## Documentation
 
-Kratos manages the browser session cookie. The local Compose configuration uses `localhost` URLs; production deployments must set the app and Kratos browser URLs to their public HTTPS origins.
+- [Local setup, configuration, and authentication](./docs/setup.md)
+- [Database initialization, access, and Prisma migrations](./docs/database.md)
+
+> The UI includes screens still under development; contractor and financial record forms are not all connected to persistent APIs yet. 
+
+> See the guides for service and database details.
