@@ -1,0 +1,165 @@
+[
+  {
+    "id": "schema.public",
+    "label": "Create schema \"public\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "Create schema \"public\"",
+        "sql": "CREATE SCHEMA IF NOT EXISTS \"public\"",
+        "params": []
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "table.app_users",
+    "label": "Create table \"app_users\"",
+    "summary": "Creates table \"app_users\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "app_users"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"app_users\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"app_users\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "table \"app_users\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"app_users\"",
+        "sql": "CREATE TABLE \"public\".\"app_users\" (\n  \"created_at\" timestamptz(3) DEFAULT (now()) NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"profile_image_key\" text,\n  \"role\" text DEFAULT 'REPRESENTATIVE' NOT NULL,\n  \"status\" text DEFAULT 'ACTIVE' NOT NULL,\n  \"updated_at\" timestamptz(3) NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"app_users_role_check_f76bcac1\" CHECK (\"role\" IN ('ADMIN', 'REPRESENTATIVE')),\n  CONSTRAINT \"app_users_status_check_1527ac15\" CHECK (\"status\" IN ('ACTIVE', 'SUSPENDED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"app_users\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3))) AS \"result\"",
+        "params": [
+          "\"public\".\"app_users\"",
+          "r",
+          "p"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "table \"app_users\""
+        }
+      }
+    ]
+  },
+  {
+    "id": "table.contractors",
+    "label": "Create table \"contractors\"",
+    "summary": "Creates table \"contractors\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "contractors"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"contractors\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"contractors\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "table \"contractors\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"contractors\"",
+        "sql": "CREATE TABLE \"public\".\"contractors\" (\n  \"created_at\" timestamptz(3) DEFAULT (now()) NOT NULL,\n  \"document\" text NOT NULL,\n  \"email\" text,\n  \"id\" uuid NOT NULL,\n  \"legal_name\" text NOT NULL,\n  \"phone\" text,\n  \"updated_at\" timestamptz(3) NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"contractors\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3))) AS \"result\"",
+        "params": [
+          "\"public\".\"contractors\"",
+          "r",
+          "p"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "table \"contractors\""
+        }
+      }
+    ]
+  },
+  {
+    "id": "unique.contractors.contractors_document_key",
+    "label": "Add unique constraint on \"contractors\" (document)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "contractors_document_key",
+        "table": "contractors"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"contractors_document_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "contractors_document_key",
+          "public",
+          "\"public\".\"contractors\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "constraint \"contractors_document_key\" on \"contractors\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"contractors_document_key\"",
+        "sql": "ALTER TABLE \"public\".\"contractors\" ADD CONSTRAINT \"contractors_document_key\" UNIQUE (\"document\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify unique constraint \"contractors_document_key\" exists on (document)",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4 AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"conkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"conrelid\" AND key_attribute.attnum = key_column.attnum) = ($5)::jsonb)) AS \"result\"",
+        "params": [
+          "contractors_document_key",
+          "public",
+          "\"public\".\"contractors\"",
+          "u",
+          "[\"document\"]"
+        ]
+      }
+    ]
+  }
+]

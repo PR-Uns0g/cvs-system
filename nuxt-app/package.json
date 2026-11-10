@@ -11,12 +11,17 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "contract:emit": "prisma contract emit",
+    "db:init": "prisma db init",
+    "migration:plan": "prisma migration plan",
+    "db:migrate:dev": "prisma db migrate --advance-ref db"
   },
   "dependencies": {
     "@fontsource-variable/manrope": "^5.2.8",
     "@primeuix/themes": "^2.0.3",
     "@primevue/nuxt-module": "^4.5.4",
+    "@prisma/orm-postgres": "^8.0.0-rc.23",
     "chart.js": "^4.5.1",
     "nuxt": "^4.4.2",
     "primeicons": "^7.0.0",
@@ -25,8 +30,10 @@
     "vue-router": "^5.0.3"
   },
   "devDependencies": {
+    "@prisma/cli-engine": "^0.9.0",
     "@types/node": "^25.5.0",
     "@vue/language-core": "^3.2.6",
+    "prisma": "^8.0.0-rc.33",
     "vue-tsc": "^3.2.6"
   }
 }

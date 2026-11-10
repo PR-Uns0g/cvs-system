@@ -3,8 +3,6 @@ services:
     build:
       context: ../nuxt-app
 
-    command: npm run dev -- --host 0.0.0.0
-
     environment:
       DATABASE_HOST: postgres
       DATABASE_PORT: 5432

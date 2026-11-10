@@ -1,0 +1,33 @@
+// use prisma-8
+enum UserRole {
+  ADMIN
+  REPRESENTATIVE
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+model AppUser {
+  id              Uuid               @id
+  role            UserRole           @default(REPRESENTATIVE)
+  profileImageKey String?            @map("profile_image_key")
+  status          AccountStatus      @default(ACTIVE)
+  createdAt       DateTime           @default(now()) @onCreate(now()) @map("created_at")
+  updatedAt       temporal.UpdatedAt @map("updated_at")
+
+  @@map("app_users")
+}
+
+model Contractor {
+  id        Uuid               @id @onCreate(uuid())
+  legalName String             @map("legal_name")
+  document  String             @unique
+  email     String?
+  phone     String?
+  createdAt DateTime           @default(now()) @onCreate(now()) @map("created_at")
+  updatedAt temporal.UpdatedAt @map("updated_at")
+
+  @@map("contractors")
+}
