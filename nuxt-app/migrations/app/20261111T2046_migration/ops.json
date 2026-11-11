@@ -1,0 +1,496 @@
+[
+  {
+    "id": "table.InvoiceMetadata",
+    "label": "Create table \"InvoiceMetadata\"",
+    "summary": "Creates table \"InvoiceMetadata\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "InvoiceMetadata"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"InvoiceMetadata\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"InvoiceMetadata\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "table \"InvoiceMetadata\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"InvoiceMetadata\"",
+        "sql": "CREATE TABLE \"public\".\"InvoiceMetadata\" (\n  \"contractor_revenue\" numeric(10,2) NOT NULL,\n  \"invoice_file_key\" text,\n  \"record_id\" uuid NOT NULL,\n  \"representative_earning\" numeric(10,2) NOT NULL,\n  \"taxes\" json,\n  \"uploaded_at\" timestamptz(3) DEFAULT (now()) NOT NULL,\n  PRIMARY KEY (\"record_id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"InvoiceMetadata\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3))) AS \"result\"",
+        "params": [
+          "\"public\".\"InvoiceMetadata\"",
+          "r",
+          "p"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "table \"InvoiceMetadata\""
+        }
+      }
+    ]
+  },
+  {
+    "id": "table.financial_records",
+    "label": "Create table \"financial_records\"",
+    "summary": "Creates table \"financial_records\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "financial_records"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"financial_records\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"financial_records\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "table \"financial_records\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"financial_records\"",
+        "sql": "CREATE TABLE \"public\".\"financial_records\" (\n  \"amount\" numeric(10,2) NOT NULL,\n  \"contractor_id\" uuid,\n  \"created_at\" timestamptz(3) DEFAULT (now()) NOT NULL,\n  \"description\" text,\n  \"direction\" text DEFAULT 'GAIN' NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"occurred_at\" timestamptz(3) NOT NULL,\n  \"owner_id\" uuid NOT NULL,\n  \"source\" text,\n  \"type\" text DEFAULT 'MANUAL' NOT NULL,\n  \"updated_at\" timestamptz(3) NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"financial_records_direction_check_350a9126\" CHECK (\"direction\" IN ('GAIN', 'LOSS')),\n  CONSTRAINT \"financial_records_type_check_79cca8bb\" CHECK (\"type\" IN ('MANUAL', 'INVOICE'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"financial_records\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3))) AS \"result\"",
+        "params": [
+          "\"public\".\"financial_records\"",
+          "r",
+          "p"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "table \"financial_records\""
+        }
+      }
+    ]
+  },
+  {
+    "id": "unique.InvoiceMetadata.InvoiceMetadata_invoice_file_key_key",
+    "label": "Add unique constraint on \"InvoiceMetadata\" (invoice_file_key)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "InvoiceMetadata_invoice_file_key_key",
+        "table": "InvoiceMetadata"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"InvoiceMetadata_invoice_file_key_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "InvoiceMetadata_invoice_file_key_key",
+          "public",
+          "\"public\".\"InvoiceMetadata\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "constraint \"InvoiceMetadata_invoice_file_key_key\" on \"InvoiceMetadata\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"InvoiceMetadata_invoice_file_key_key\"",
+        "sql": "ALTER TABLE \"public\".\"InvoiceMetadata\" ADD CONSTRAINT \"InvoiceMetadata_invoice_file_key_key\" UNIQUE (\"invoice_file_key\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify unique constraint \"InvoiceMetadata_invoice_file_key_key\" exists on (invoice_file_key)",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4 AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"conkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"conrelid\" AND key_attribute.attnum = key_column.attnum) = ($5)::jsonb)) AS \"result\"",
+        "params": [
+          "InvoiceMetadata_invoice_file_key_key",
+          "public",
+          "\"public\".\"InvoiceMetadata\"",
+          "u",
+          "[\"invoice_file_key\"]"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.app_users.app_users_profile_image_key_key",
+    "label": "Add unique constraint on \"app_users\" (profile_image_key)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "app_users_profile_image_key_key",
+        "table": "app_users"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"app_users_profile_image_key_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "app_users_profile_image_key_key",
+          "public",
+          "\"public\".\"app_users\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "constraint \"app_users_profile_image_key_key\" on \"app_users\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"app_users_profile_image_key_key\"",
+        "sql": "ALTER TABLE \"public\".\"app_users\" ADD CONSTRAINT \"app_users_profile_image_key_key\" UNIQUE (\"profile_image_key\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify unique constraint \"app_users_profile_image_key_key\" exists on (profile_image_key)",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4 AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"conkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"conrelid\" AND key_attribute.attnum = key_column.attnum) = ($5)::jsonb)) AS \"result\"",
+        "params": [
+          "app_users_profile_image_key_key",
+          "public",
+          "\"public\".\"app_users\"",
+          "u",
+          "[\"profile_image_key\"]"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.financial_records.financial_records_contractor_id_idx_3efce6ab",
+    "label": "Create index \"financial_records_contractor_id_idx_3efce6ab\" on \"financial_records\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "financial_records_contractor_id_idx_3efce6ab",
+        "table": "financial_records"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"financial_records_contractor_id_idx_3efce6ab\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"financial_records_contractor_id_idx_3efce6ab\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "index \"financial_records_contractor_id_idx_3efce6ab\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"financial_records_contractor_id_idx_3efce6ab\"",
+        "sql": "CREATE INDEX \"financial_records_contractor_id_idx_3efce6ab\" ON \"public\".\"financial_records\" (\"contractor_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"financial_records_contractor_id_idx_3efce6ab\" exists on \"financial_records\" with the planned definition",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_index\" AS \"i\" ON \"i\".\"indexrelid\" = \"c\".\"oid\" INNER JOIN \"pg_am\" AS \"m\" ON \"m\".\"oid\" = \"c\".\"relam\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3) AND \"i\".\"indrelid\" = to_regclass($4) AND NOT (\"i\".\"indisunique\") AND \"m\".\"amname\" = $5 AND (\"i\".\"indexprs\" IS NULL AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"i\".\"indkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"i\".\"indrelid\" AND key_attribute.attnum = key_column.attnum) = ($6)::jsonb) AND \"i\".\"indpred\" IS NULL)) AS \"result\"",
+        "params": [
+          "\"public\".\"financial_records_contractor_id_idx_3efce6ab\"",
+          "i",
+          "I",
+          "\"public\".\"financial_records\"",
+          "btree",
+          "[\"contractor_id\"]"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.financial_records.financial_records_owner_id_idx_ade9f347",
+    "label": "Create index \"financial_records_owner_id_idx_ade9f347\" on \"financial_records\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "financial_records_owner_id_idx_ade9f347",
+        "table": "financial_records"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"financial_records_owner_id_idx_ade9f347\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"financial_records_owner_id_idx_ade9f347\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "index \"financial_records_owner_id_idx_ade9f347\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"financial_records_owner_id_idx_ade9f347\"",
+        "sql": "CREATE INDEX \"financial_records_owner_id_idx_ade9f347\" ON \"public\".\"financial_records\" (\"owner_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"financial_records_owner_id_idx_ade9f347\" exists on \"financial_records\" with the planned definition",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_index\" AS \"i\" ON \"i\".\"indexrelid\" = \"c\".\"oid\" INNER JOIN \"pg_am\" AS \"m\" ON \"m\".\"oid\" = \"c\".\"relam\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3) AND \"i\".\"indrelid\" = to_regclass($4) AND NOT (\"i\".\"indisunique\") AND \"m\".\"amname\" = $5 AND (\"i\".\"indexprs\" IS NULL AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"i\".\"indkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"i\".\"indrelid\" AND key_attribute.attnum = key_column.attnum) = ($6)::jsonb) AND \"i\".\"indpred\" IS NULL)) AS \"result\"",
+        "params": [
+          "\"public\".\"financial_records_owner_id_idx_ade9f347\"",
+          "i",
+          "I",
+          "\"public\".\"financial_records\"",
+          "btree",
+          "[\"owner_id\"]"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.financial_records.financial_records_owner_id_occurred_at_idx_403f39d6",
+    "label": "Create index \"financial_records_owner_id_occurred_at_idx_403f39d6\" on \"financial_records\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "financial_records_owner_id_occurred_at_idx_403f39d6",
+        "table": "financial_records"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"financial_records_owner_id_occurred_at_idx_403f39d6\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"financial_records_owner_id_occurred_at_idx_403f39d6\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "index \"financial_records_owner_id_occurred_at_idx_403f39d6\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"financial_records_owner_id_occurred_at_idx_403f39d6\"",
+        "sql": "CREATE INDEX \"financial_records_owner_id_occurred_at_idx_403f39d6\" ON \"public\".\"financial_records\" (\"owner_id\", \"occurred_at\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"financial_records_owner_id_occurred_at_idx_403f39d6\" exists on \"financial_records\" with the planned definition",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_index\" AS \"i\" ON \"i\".\"indexrelid\" = \"c\".\"oid\" INNER JOIN \"pg_am\" AS \"m\" ON \"m\".\"oid\" = \"c\".\"relam\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3) AND \"i\".\"indrelid\" = to_regclass($4) AND NOT (\"i\".\"indisunique\") AND \"m\".\"amname\" = $5 AND (\"i\".\"indexprs\" IS NULL AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"i\".\"indkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"i\".\"indrelid\" AND key_attribute.attnum = key_column.attnum) = ($6)::jsonb) AND \"i\".\"indpred\" IS NULL)) AS \"result\"",
+        "params": [
+          "\"public\".\"financial_records_owner_id_occurred_at_idx_403f39d6\"",
+          "i",
+          "I",
+          "\"public\".\"financial_records\"",
+          "btree",
+          "[\"owner_id\",\"occurred_at\"]"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.InvoiceMetadata.InvoiceMetadata_record_id_fkey",
+    "label": "Add foreign key \"InvoiceMetadata_record_id_fkey\" on \"InvoiceMetadata\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "InvoiceMetadata_record_id_fkey",
+        "table": "InvoiceMetadata"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"InvoiceMetadata_record_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "InvoiceMetadata_record_id_fkey",
+          "public",
+          "\"public\".\"InvoiceMetadata\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "FK \"InvoiceMetadata_record_id_fkey\" on \"InvoiceMetadata\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"InvoiceMetadata_record_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"InvoiceMetadata\"\nADD CONSTRAINT \"InvoiceMetadata_record_id_fkey\"\nFOREIGN KEY (\"record_id\")\nREFERENCES \"public\".\"financial_records\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"InvoiceMetadata_record_id_fkey\" exists with the planned columns, referenced table and actions",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4 AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"conkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"conrelid\" AND key_attribute.attnum = key_column.attnum) = ($5)::jsonb AND \"c\".\"confrelid\" = to_regclass($6) AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"confkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"confrelid\" AND key_attribute.attnum = key_column.attnum) = ($7)::jsonb AND \"c\".\"confdeltype\" = $8 AND \"c\".\"confupdtype\" = $9)) AS \"result\"",
+        "params": [
+          "InvoiceMetadata_record_id_fkey",
+          "public",
+          "\"public\".\"InvoiceMetadata\"",
+          "f",
+          "[\"record_id\"]",
+          "\"public\".\"financial_records\"",
+          "[\"id\"]",
+          "c",
+          "a"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.financial_records.financial_records_owner_id_fkey",
+    "label": "Add foreign key \"financial_records_owner_id_fkey\" on \"financial_records\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "financial_records_owner_id_fkey",
+        "table": "financial_records"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"financial_records_owner_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "financial_records_owner_id_fkey",
+          "public",
+          "\"public\".\"financial_records\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "FK \"financial_records_owner_id_fkey\" on \"financial_records\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"financial_records_owner_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"financial_records\"\nADD CONSTRAINT \"financial_records_owner_id_fkey\"\nFOREIGN KEY (\"owner_id\")\nREFERENCES \"public\".\"app_users\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"financial_records_owner_id_fkey\" exists with the planned columns, referenced table and actions",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4 AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"conkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"conrelid\" AND key_attribute.attnum = key_column.attnum) = ($5)::jsonb AND \"c\".\"confrelid\" = to_regclass($6) AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"confkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"confrelid\" AND key_attribute.attnum = key_column.attnum) = ($7)::jsonb AND \"c\".\"confdeltype\" = $8 AND \"c\".\"confupdtype\" = $9)) AS \"result\"",
+        "params": [
+          "financial_records_owner_id_fkey",
+          "public",
+          "\"public\".\"financial_records\"",
+          "f",
+          "[\"owner_id\"]",
+          "\"public\".\"app_users\"",
+          "[\"id\"]",
+          "a",
+          "a"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.financial_records.financial_records_contractor_id_fkey",
+    "label": "Add foreign key \"financial_records_contractor_id_fkey\" on \"financial_records\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "financial_records_contractor_id_fkey",
+        "table": "financial_records"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"financial_records_contractor_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "financial_records_contractor_id_fkey",
+          "public",
+          "\"public\".\"financial_records\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "FK \"financial_records_contractor_id_fkey\" on \"financial_records\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"financial_records_contractor_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"financial_records\"\nADD CONSTRAINT \"financial_records_contractor_id_fkey\"\nFOREIGN KEY (\"contractor_id\")\nREFERENCES \"public\".\"contractors\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"financial_records_contractor_id_fkey\" exists with the planned columns, referenced table and actions",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4 AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"conkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"conrelid\" AND key_attribute.attnum = key_column.attnum) = ($5)::jsonb AND \"c\".\"confrelid\" = to_regclass($6) AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"confkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"confrelid\" AND key_attribute.attnum = key_column.attnum) = ($7)::jsonb AND \"c\".\"confdeltype\" = $8 AND \"c\".\"confupdtype\" = $9)) AS \"result\"",
+        "params": [
+          "financial_records_contractor_id_fkey",
+          "public",
+          "\"public\".\"financial_records\"",
+          "f",
+          "[\"contractor_id\"]",
+          "\"public\".\"contractors\"",
+          "[\"id\"]",
+          "a",
+          "a"
+        ]
+      }
+    ]
+  }
+]

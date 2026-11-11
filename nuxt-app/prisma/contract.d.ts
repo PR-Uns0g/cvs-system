@@ -23,9 +23,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'62cdd690b8fd67e80300b70454d260e990d92347ca1309593f222e4a58e66092'>;
+  StorageHashBase<'1b4c87ba635daa87be471a837c04664f54b0cb3101862f742d302471205f3d89'>;
 export type ExecutionHash =
-  ExecutionHashBase<'a7a2b2773d1ab77890918748ff681bbbe85c37d1aec287068d12e686fc0cf8b5'>;
+  ExecutionHashBase<'ac05b5062fdd4c52dd29b8e82d0f86ba8969bca0b6e6faf1f4e128d5adaa55a4'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -288,6 +288,13 @@ type FieldTypeOverrides = {
           readonly input: 'ACTIVE' | 'SUSPENDED';
         };
       };
+      readonly FinancialRecord: {
+        readonly direction: { readonly output: 'GAIN' | 'LOSS'; readonly input: 'GAIN' | 'LOSS' };
+        readonly type: {
+          readonly output: 'MANUAL' | 'INVOICE';
+          readonly input: 'MANUAL' | 'INVOICE';
+        };
+      };
     };
   };
 };
@@ -317,6 +324,13 @@ type ColumnTypeOverrides = {
       readonly status: {
         readonly output: 'ACTIVE' | 'SUSPENDED';
         readonly input: 'ACTIVE' | 'SUSPENDED';
+      };
+    };
+    readonly financial_records: {
+      readonly direction: { readonly output: 'GAIN' | 'LOSS'; readonly input: 'GAIN' | 'LOSS' };
+      readonly type: {
+        readonly output: 'MANUAL' | 'INVOICE';
+        readonly input: 'MANUAL' | 'INVOICE';
       };
     };
   };
@@ -356,12 +370,41 @@ export namespace Models {
     updatedAt: FieldOutputTypes['public']['Contractor']['updatedAt'];
     readonly [RelationKeys]?: never;
   };
+  export type public_FinancialRecord = {
+    amount: FieldOutputTypes['public']['FinancialRecord']['amount'];
+    contractorId: FieldOutputTypes['public']['FinancialRecord']['contractorId'];
+    createdAt: FieldOutputTypes['public']['FinancialRecord']['createdAt'];
+    description: FieldOutputTypes['public']['FinancialRecord']['description'];
+    direction: FieldOutputTypes['public']['FinancialRecord']['direction'];
+    id: FieldOutputTypes['public']['FinancialRecord']['id'];
+    occurredAt: FieldOutputTypes['public']['FinancialRecord']['occurredAt'];
+    ownerId: FieldOutputTypes['public']['FinancialRecord']['ownerId'];
+    source: FieldOutputTypes['public']['FinancialRecord']['source'];
+    type: FieldOutputTypes['public']['FinancialRecord']['type'];
+    updatedAt: FieldOutputTypes['public']['FinancialRecord']['updatedAt'];
+    contractor: public_Contractor | null;
+    invoice: public_InvoiceMetadata | null;
+    owner: public_AppUser;
+    readonly [RelationKeys]?: 'contractor' | 'invoice' | 'owner';
+  };
+  export type public_InvoiceMetadata = {
+    contractorRevenue: FieldOutputTypes['public']['InvoiceMetadata']['contractorRevenue'];
+    invoiceFileKey: FieldOutputTypes['public']['InvoiceMetadata']['invoiceFileKey'];
+    recordId: FieldOutputTypes['public']['InvoiceMetadata']['recordId'];
+    representativeEarning: FieldOutputTypes['public']['InvoiceMetadata']['representativeEarning'];
+    taxes: FieldOutputTypes['public']['InvoiceMetadata']['taxes'];
+    uploadedAt: FieldOutputTypes['public']['InvoiceMetadata']['uploadedAt'];
+    record: public_FinancialRecord;
+    readonly [RelationKeys]?: 'record';
+  };
 }
 
 export declare const models: {
   public: {
     AppUser: Models.public_AppUser;
     Contractor: Models.public_Contractor;
+    FinancialRecord: Models.public_FinancialRecord;
+    InvoiceMetadata: Models.public_InvoiceMetadata;
   };
 };
 
@@ -434,7 +477,7 @@ type ContractBase = Omit<
                 };
               };
               primaryKey: { readonly columns: readonly ['id'] };
-              uniques: readonly [];
+              uniques: readonly [{ readonly columns: readonly ['profile_image_key'] }];
               indexes: readonly [];
               foreignKeys: readonly [];
             };
@@ -491,11 +534,211 @@ type ContractBase = Omit<
               indexes: readonly [];
               foreignKeys: readonly [];
             };
+            readonly financial_records: {
+              columns: {
+                readonly amount: {
+                  readonly dataType: 'pg/numeric';
+                  readonly codecId: 'pg/numeric@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly precision: 10; readonly scale: 2 };
+                  readonly many: false;
+                };
+                readonly contractor_id: {
+                  readonly dataType: 'pg/uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly created_at: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                  readonly typeParams: { readonly precision: 3 };
+                  readonly many: false;
+                };
+                readonly description: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly direction: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/text@1', 'GAIN'>;
+                  };
+                  readonly many: false;
+                };
+                readonly id: {
+                  readonly dataType: 'pg/uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly occurred_at: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly precision: 3 };
+                  readonly many: false;
+                };
+                readonly owner_id: {
+                  readonly dataType: 'pg/uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly source: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly type: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/text@1', 'MANUAL'>;
+                  };
+                  readonly many: false;
+                };
+                readonly updated_at: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly precision: 3 };
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'financial_records_contractor_id_idx_3efce6ab';
+                  readonly prefix: 'financial_records_contractor_id_idx';
+                  readonly columns: readonly ['contractor_id'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'financial_records_owner_id_idx_ade9f347';
+                  readonly prefix: 'financial_records_owner_id_idx';
+                  readonly columns: readonly ['owner_id'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'financial_records_owner_id_occurred_at_idx_403f39d6';
+                  readonly prefix: 'financial_records_owner_id_occurred_at_idx';
+                  readonly columns: readonly ['owner_id', 'occurred_at'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'financial_records';
+                    readonly columns: readonly ['owner_id'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'app_users';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'financial_records';
+                    readonly columns: readonly ['contractor_id'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'contractors';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
+            readonly InvoiceMetadata: {
+              columns: {
+                readonly contractor_revenue: {
+                  readonly dataType: 'pg/numeric';
+                  readonly codecId: 'pg/numeric@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly precision: 10; readonly scale: 2 };
+                  readonly many: false;
+                };
+                readonly invoice_file_key: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly record_id: {
+                  readonly dataType: 'pg/uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly representative_earning: {
+                  readonly dataType: 'pg/numeric';
+                  readonly codecId: 'pg/numeric@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly precision: 10; readonly scale: 2 };
+                  readonly many: false;
+                };
+                readonly taxes: {
+                  readonly dataType: 'pg/json';
+                  readonly codecId: 'pg/json@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly uploaded_at: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                  readonly typeParams: { readonly precision: 3 };
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['record_id'] };
+              uniques: readonly [{ readonly columns: readonly ['invoice_file_key'] }];
+              indexes: readonly [];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'InvoiceMetadata';
+                    readonly columns: readonly ['record_id'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'financial_records';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
           };
           readonly valueSet: {
             readonly AccountStatus: {
               readonly kind: 'valueSet';
               readonly values: readonly ['ACTIVE', 'SUSPENDED'];
+            };
+            readonly RecordDirection: {
+              readonly kind: 'valueSet';
+              readonly values: readonly ['GAIN', 'LOSS'];
+            };
+            readonly RecordType: {
+              readonly kind: 'valueSet';
+              readonly values: readonly ['MANUAL', 'INVOICE'];
             };
             readonly UserRole: {
               readonly kind: 'valueSet';
@@ -512,10 +755,18 @@ type ContractBase = Omit<
   readonly target: 'postgres';
   readonly targetFamily: 'sql';
   readonly roots: {
+    readonly InvoiceMetadata: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'InvoiceMetadata';
+    };
     readonly app_users: { readonly namespace: 'public' & NamespaceId; readonly model: 'AppUser' };
     readonly contractors: {
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'Contractor';
+    };
+    readonly financial_records: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'FinancialRecord';
     };
   };
   readonly domain: {
@@ -625,6 +876,191 @@ type ContractBase = Omit<
               };
             };
           };
+          readonly FinancialRecord: {
+            readonly fields: {
+              readonly amount: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/numeric@1';
+                  readonly typeParams: { readonly precision: 10; readonly scale: 2 };
+                };
+              };
+              readonly contractorId: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly typeParams: { readonly precision: 3 };
+                };
+              };
+              readonly description: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly direction: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly occurredAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly typeParams: { readonly precision: 3 };
+                };
+              };
+              readonly ownerId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly source: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly type: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly updatedAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly typeParams: { readonly precision: 3 };
+                };
+              };
+            };
+            readonly relations: {
+              readonly contractor: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Contractor';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: true;
+                readonly on: {
+                  readonly localFields: readonly ['contractorId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly invoice: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'InvoiceMetadata';
+                };
+                readonly cardinality: '1:1';
+                readonly nullable: true;
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['recordId'];
+                };
+              };
+              readonly owner: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'AppUser';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['ownerId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'financial_records';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly amount: { readonly column: 'amount' };
+                readonly contractorId: { readonly column: 'contractor_id' };
+                readonly createdAt: { readonly column: 'created_at' };
+                readonly description: { readonly column: 'description' };
+                readonly direction: { readonly column: 'direction' };
+                readonly id: { readonly column: 'id' };
+                readonly occurredAt: { readonly column: 'occurred_at' };
+                readonly ownerId: { readonly column: 'owner_id' };
+                readonly source: { readonly column: 'source' };
+                readonly type: { readonly column: 'type' };
+                readonly updatedAt: { readonly column: 'updated_at' };
+              };
+            };
+          };
+          readonly InvoiceMetadata: {
+            readonly fields: {
+              readonly contractorRevenue: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/numeric@1';
+                  readonly typeParams: { readonly precision: 10; readonly scale: 2 };
+                };
+              };
+              readonly invoiceFileKey: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly recordId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly representativeEarning: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/numeric@1';
+                  readonly typeParams: { readonly precision: 10; readonly scale: 2 };
+                };
+              };
+              readonly taxes: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/json@1' };
+              };
+              readonly uploadedAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly typeParams: { readonly precision: 3 };
+                };
+              };
+            };
+            readonly relations: {
+              readonly record: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'FinancialRecord';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['recordId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'InvoiceMetadata';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly contractorRevenue: { readonly column: 'contractor_revenue' };
+                readonly invoiceFileKey: { readonly column: 'invoice_file_key' };
+                readonly recordId: { readonly column: 'record_id' };
+                readonly representativeEarning: { readonly column: 'representative_earning' };
+                readonly taxes: { readonly column: 'taxes' };
+                readonly uploadedAt: { readonly column: 'uploaded_at' };
+              };
+            };
+          };
         };
         readonly enum: {
           readonly AccountStatus: {
@@ -632,6 +1068,20 @@ type ContractBase = Omit<
             readonly members: readonly [
               { readonly name: 'ACTIVE'; readonly value: 'ACTIVE' },
               { readonly name: 'SUSPENDED'; readonly value: 'SUSPENDED' },
+            ];
+          };
+          readonly RecordDirection: {
+            readonly codecId: 'pg/text@1';
+            readonly members: readonly [
+              { readonly name: 'GAIN'; readonly value: 'GAIN' },
+              { readonly name: 'LOSS'; readonly value: 'LOSS' },
+            ];
+          };
+          readonly RecordType: {
+            readonly codecId: 'pg/text@1';
+            readonly members: readonly [
+              { readonly name: 'MANUAL'; readonly value: 'MANUAL' },
+              { readonly name: 'INVOICE'; readonly value: 'INVOICE' },
             ];
           };
           readonly UserRole: {
@@ -646,6 +1096,14 @@ type ContractBase = Omit<
           readonly AccountStatus: readonly [
             { readonly name: 'ACTIVE'; readonly value: 'ACTIVE' },
             { readonly name: 'SUSPENDED'; readonly value: 'SUSPENDED' },
+          ];
+          readonly RecordDirection: readonly [
+            { readonly name: 'GAIN'; readonly value: 'GAIN' },
+            { readonly name: 'LOSS'; readonly value: 'LOSS' },
+          ];
+          readonly RecordType: readonly [
+            { readonly name: 'MANUAL'; readonly value: 'MANUAL' },
+            { readonly name: 'INVOICE'; readonly value: 'INVOICE' },
           ];
           readonly UserRole: readonly [
             { readonly name: 'ADMIN'; readonly value: 'ADMIN' },
@@ -688,6 +1146,18 @@ type ContractBase = Omit<
     readonly executionHash: ExecutionHash;
     readonly mutations: {
       readonly defaults: readonly [
+        {
+          readonly onCreate: {
+            readonly id: 'timestampNow';
+            readonly kind: 'generator';
+            readonly params: { readonly precision: 3 };
+          };
+          readonly ref: {
+            readonly entry: 'InvoiceMetadata';
+            readonly field: 'uploaded_at';
+            readonly namespace: 'public';
+          };
+        },
         {
           readonly onCreate: {
             readonly id: 'timestampNow';
@@ -750,6 +1220,43 @@ type ContractBase = Omit<
           };
           readonly ref: {
             readonly entry: 'contractors';
+            readonly field: 'updated_at';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: {
+            readonly id: 'timestampNow';
+            readonly kind: 'generator';
+            readonly params: { readonly precision: 3 };
+          };
+          readonly ref: {
+            readonly entry: 'financial_records';
+            readonly field: 'created_at';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'financial_records';
+            readonly field: 'id';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: {
+            readonly id: 'timestampNow';
+            readonly kind: 'generator';
+            readonly params: { readonly precision: 3 };
+          };
+          readonly onUpdate: {
+            readonly id: 'timestampNow';
+            readonly kind: 'generator';
+            readonly params: { readonly precision: 3 };
+          };
+          readonly ref: {
+            readonly entry: 'financial_records';
             readonly field: 'updated_at';
             readonly namespace: 'public';
           };

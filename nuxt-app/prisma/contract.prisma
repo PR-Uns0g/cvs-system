@@ -9,10 +9,20 @@ enum AccountStatus {
   SUSPENDED
 }
 
+enum RecordType {
+  MANUAL
+  INVOICE
+}
+
+enum RecordDirection {
+  GAIN
+  LOSS
+}
+
 model AppUser {
   id              Uuid               @id
   role            UserRole           @default(REPRESENTATIVE)
-  profileImageKey String?            @map("profile_image_key")
+  profileImageKey String?            @unique @map("profile_image_key")
   status          AccountStatus      @default(ACTIVE)
   createdAt       DateTime           @default(now()) @onCreate(now()) @map("created_at")
   updatedAt       temporal.UpdatedAt @map("updated_at")
@@ -30,4 +40,37 @@ model Contractor {
   updatedAt temporal.UpdatedAt @map("updated_at")
 
   @@map("contractors")
+}
+
+model FinancialRecord {
+  id                      Uuid               @id @onCreate(uuid())
+  ownerId                 Uuid               @map("owner_id")
+  type                    RecordType         @default(MANUAL)
+  amount                  Decimal(precision: 10, scale: 2) 
+  direction               RecordDirection    @default(GAIN)
+  description             String?
+  source                  String?
+  contractorId            Uuid?              @map("contractor_id")
+  occurredAt              DateTime           @map("occurred_at")
+  createdAt               DateTime           @default(now()) @onCreate(now()) @map("created_at")
+  updatedAt               temporal.UpdatedAt @map("updated_at")
+
+  owner                   AppUser            @relation(fields: [ownerId], references: [id])
+  contractor              Contractor?        @relation(fields: [contractorId], references: [id])
+  invoice                 InvoiceMetadata?       
+  
+  @@index([ownerId, occurredAt])
+  @@index([contractorId])
+  @@map("financial_records")  
+}
+
+model InvoiceMetadata {
+  recordId                Uuid                                    @id @map("record_id")
+  contractorRevenue       Decimal(precision: 10, scale: 2)        @map("contractor_revenue")
+  representativeEarning   Decimal(precision: 10, scale: 2)        @map("representative_earning")
+  taxes                   Json?
+  invoiceFileKey          String?                                 @unique @map("invoice_file_key")
+  uploadedAt              DateTime                                @default(now()) @onCreate(now()) @map("uploaded_at")
+  
+  record                  FinancialRecord                         @relation(fields: [recordId], references: [id], onDelete: Cascade)  
 }
