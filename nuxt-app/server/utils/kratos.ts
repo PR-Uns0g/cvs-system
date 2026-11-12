@@ -12,8 +12,9 @@ export async function fetchKratos<T>(
     });
   } catch (cause) {
     throw createError({
-      statusCode: 502,
-      statusMessage: "The authentication service is unavailable.",
+      status: 502,
+      statusText: "Bad Gateway",
+      message: "The authentication service is unavailable.",
       cause,
     });
   }

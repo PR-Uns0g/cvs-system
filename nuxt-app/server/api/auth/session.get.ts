@@ -17,8 +17,9 @@ export default defineEventHandler(async (event) => {
       cause instanceof Error ? cause.name : "Unknown error",
     );
     throw createError({
-      statusCode: 503,
-      statusMessage: "Your application profile could not be initialized.",
+      status: 503,
+      statusText: "Service Unavailable",
+      message: "Your application profile could not be initialized.",
     });
   }
 

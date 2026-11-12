@@ -17,8 +17,9 @@ export default defineEventHandler(async (event) => {
     || !flowIdPattern.test(flowId)
   ) {
     throw createError({
-      statusCode: 400,
-      statusMessage: "A valid authentication flow is required.",
+      status: 400,
+      statusText: "Bad Request",
+      message: "A valid authentication flow is required.",
     });
   }
 
@@ -33,15 +34,17 @@ export default defineEventHandler(async (event) => {
 
   if (response.status === 404 || response.status === 410) {
     throw createError({
-      statusCode: 410,
-      statusMessage: "This authentication flow expired. Start again.",
+      status: 410,
+      statusText: "Gone",
+      message: "This authentication flow expired. Start again.",
     });
   }
 
   if (response.status !== 200 || !response._data) {
     throw createError({
-      statusCode: 502,
-      statusMessage: "Kratos could not load the authentication flow.",
+      status: 502,
+      statusText: "Bad Gateway",
+      message: "Kratos could not load the authentication flow.",
     });
   }
 

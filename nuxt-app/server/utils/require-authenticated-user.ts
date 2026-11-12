@@ -39,8 +39,9 @@ export async function getAuthenticatedUser(
 
   if (response.status !== 200 || !response._data) {
     throw createError({
-      statusCode: 502,
-      statusMessage: "Kratos could not verify the session.",
+      status: 502,
+      statusText: "Bad Gateway",
+      message: "Kratos could not verify the session.",
     });
   }
 
@@ -52,8 +53,9 @@ export async function getAuthenticatedUser(
   const identityId = session.identity.id;
   if (typeof identityId !== "string" || !isUuid(identityId)) {
     throw createError({
-      statusCode: 502,
-      statusMessage: "Kratos returned an invalid identity.",
+      status: 502,
+      statusText: "Bad Gateway",
+      message: "Kratos returned an invalid identity.",
     });
   }
 
@@ -71,8 +73,9 @@ export async function requireAuthenticatedUser(
   const user = await getAuthenticatedUser(event);
   if (!user) {
     throw createError({
-      statusCode: 401,
-      statusMessage: "Authentication required.",
+      status: 401,
+      statusText: "Unauthorized",
+      message: "Authentication required.",
     });
   }
 

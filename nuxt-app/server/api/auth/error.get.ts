@@ -10,8 +10,9 @@ export default defineEventHandler(async (event) => {
   const errorId = getQuery(event).id;
   if (typeof errorId !== "string" || !errorIdPattern.test(errorId)) {
     throw createError({
-      statusCode: 400,
-      statusMessage: "A valid authentication error is required.",
+      status: 400,
+      statusText: "Bad Request",
+      message: "A valid authentication error is required.",
     });
   }
 
@@ -23,8 +24,9 @@ export default defineEventHandler(async (event) => {
 
   if (response.status === 404 || response.status === 410) {
     throw createError({
-      statusCode: 404,
-      statusMessage: "This authentication error is no longer available.",
+      status: 404,
+      statusText: "Not Found",
+      message: "This authentication error is no longer available.",
     });
   }
 
@@ -32,8 +34,9 @@ export default defineEventHandler(async (event) => {
   const message = error?.message ?? response._data?.message;
   if (response.status !== 200 || !message) {
     throw createError({
-      statusCode: 502,
-      statusMessage: "Kratos could not load the authentication error.",
+      status: 502,
+      statusText: "Bad Gateway",
+      message: "Kratos could not load the authentication error.",
     });
   }
 
