@@ -1,58 +1,16 @@
 import { ensureAppUser } from "~~/server/utils/app-user";
-import { fetchKratos } from "~~/server/utils/kratos";
-
-interface KratosSession {
-  active: boolean;
-  identity?: {
-    id?: unknown;
-    traits?: {
-      email?: unknown;
-      fullName?: unknown;
-    };
-  };
-}
+import { getAuthenticatedUser } from "~~/server/utils/require-authenticated-user";
 
 export default defineEventHandler(async (event) => {
   setResponseHeader(event, "Cache-Control", "private, no-store");
 
-  const cookie = getRequestHeader(event, "cookie");
-  if (!cookie) {
+  const user = await getAuthenticatedUser(event);
+  if (!user) {
     return { authenticated: false };
-  }
-
-  const config = useRuntimeConfig(event);
-  const response = await fetchKratos<KratosSession>(
-    config.kratosInternalUrl,
-    "/sessions/whoami",
-    { headers: { cookie } },
-  );
-
-  if (response.status === 401 || response.status === 403) {
-    return { authenticated: false };
-  }
-
-  if (response.status !== 200 || !response._data) {
-    throw createError({
-      statusCode: 502,
-      statusMessage: "Kratos could not verify the session.",
-    });
-  }
-
-  const session = response._data;
-  if (!session.active || !session.identity) {
-    return { authenticated: false };
-  }
-
-  const identityId = session.identity.id;
-  if (typeof identityId !== "string" || !isUuid(identityId)) {
-    throw createError({
-      statusCode: 502,
-      statusMessage: "Kratos returned an invalid identity.",
-    });
   }
 
   try {
-    await ensureAppUser(identityId);
+    await ensureAppUser(user.id);
   } catch (cause) {
     console.error(
       "Failed to provision an app user for an authenticated Kratos session.",
@@ -64,16 +22,11 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const traits = session.identity.traits;
   return {
     authenticated: true,
     user: {
-      fullName: typeof traits?.fullName === "string" ? traits.fullName : null,
-      email: typeof traits?.email === "string" ? traits.email : null,
+      fullName: user.fullName,
+      email: user.email,
     },
   };
 });
-
-function isUuid(value: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
-}
