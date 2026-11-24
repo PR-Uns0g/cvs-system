@@ -1,8 +1,14 @@
-import { db } from "../../prisma/db";
+import { randomUUID } from "node:crypto";
+import { Buffer } from "node:buffer";
 import {
-  extractNfseData,
-  NfseExtractionError,
-} from "../utils/nfse";
+  DeleteObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
+import { db } from "../../prisma/db";
+import { extractNfseData, NfseExtractionError } from "../utils/nfse";
+
+const MAX_INVOICE_XML_BYTES = 5_000_000;
 
 export default defineEventHandler(async (event) => {
   const user = await getAuthenticatedUser(event);
@@ -12,6 +18,16 @@ export default defineEventHandler(async (event) => {
       statusText: "Unauthorized",
       message: "You must be authenticated to create a new record.",
     });
+  }
+
+  const contentType = getRequestHeader(event, "content-type")
+    ?.split(";", 1)[0]
+    ?.trim()
+    .toLowerCase();
+
+  if (contentType === "application/xml" || contentType === "text/xml") {
+    const xml = await readInvoiceXml(event);
+    return createInvoiceRecord(event, user, xml);
   }
 
   const body: unknown = await readBody(event);
@@ -26,29 +42,11 @@ export default defineEventHandler(async (event) => {
   const input = body as Record<string, unknown>;
 
   if (input.type === "INVOICE") {
-    if (typeof input.xml !== "string" || !input.xml.trim()) {
-      throw createError({
-        status: 400,
-        statusText: "Bad Request",
-        message: "An invoice XML document is required.",
-      });
-    }
-
-    try {
-      let nfseData = extractNfseData(input.xml);
-      console.log("payloadReceived:", nfseData);
-      return nfseData;
-    } catch (error) {
-      if (error instanceof NfseExtractionError) {
-        throw createError({
-          status: 400,
-          statusText: "Bad Request",
-          message: error.message,
-        });
-      }
-
-      throw error;
-    }
+    throw createError({
+      status: 415,
+      statusText: "Unsupported Media Type",
+      message: "Send an invoice as an application/xml request body.",
+    });
   }
 
   if (input.type !== "MANUAL") {
@@ -57,14 +55,15 @@ export default defineEventHandler(async (event) => {
       statusText: "Bad Request",
       message: "type must be MANUAL or INVOICE.",
     });
-  } 
+  }
 
   const amount = parseManualAmount(input.amount);
   if (amount === null) {
     throw createError({
       status: 400,
       statusText: "Bad Request",
-      message: "amount must be a positive value with at most two decimal places.",
+      message:
+        "amount must be a positive value with at most two decimal places.",
     });
   }
 
@@ -88,7 +87,8 @@ export default defineEventHandler(async (event) => {
     throw createError({
       status: 400,
       statusText: "Bad Request",
-      message: "source must be a non-empty string and description must be a string or null.",
+      message:
+        "source must be a non-empty string and description must be a string or null.",
     });
   }
 
@@ -97,7 +97,8 @@ export default defineEventHandler(async (event) => {
     type: input.type,
     amount,
     direction: input.direction,
-    description: typeof description === "string" ? description.trim() || null : null,
+    description:
+      typeof description === "string" ? description.trim() || null : null,
     source: source.trim(),
   });
 
@@ -106,6 +107,175 @@ export default defineEventHandler(async (event) => {
   setResponseStatus(event, 201);
   return record;
 });
+
+async function createInvoiceRecord(
+  event: Parameters<typeof getAuthenticatedUser>[0],
+  user: NonNullable<Awaited<ReturnType<typeof getAuthenticatedUser>>>,
+  xml: string,
+) {
+  let nfseData: ReturnType<typeof extractNfseData>;
+  try {
+    nfseData = extractNfseData(xml);
+  } catch (error) {
+    if (error instanceof NfseExtractionError) {
+      throw createError({
+        status: 400,
+        statusText: "Bad Request",
+        message: error.message,
+      });
+    }
+    throw error;
+  }
+
+  const config = useRuntimeConfig(event);
+  if (
+    !config.s3.endpoint ||
+    !config.s3.bucket ||
+    !config.s3.accessKey ||
+    !config.s3.secretKey
+  ) {
+    throw createError({
+      status: 503,
+      statusText: "Service Unavailable",
+      message: "Invoice storage is not configured.",
+    });
+  }
+
+  const storage = new S3Client({
+    endpoint: config.s3.endpoint,
+    region: "us-east-1",
+    forcePathStyle: true,
+    credentials: {
+      accessKeyId: config.s3.accessKey,
+      secretAccessKey: config.s3.secretKey,
+    },
+  });
+  const sourceFileKey = `invoices/${randomUUID()}.xml`;
+  let uploaded = false;
+
+  try {
+    await storage.send(
+      new PutObjectCommand({
+        Bucket: config.s3.bucket,
+        Key: sourceFileKey,
+        Body: Buffer.from(xml, "utf8"),
+        ContentType: "application/xml",
+      }),
+    );
+    uploaded = true;
+
+    const documentNumber = nfseData.contractor.document;
+    let contractorId = await db.orm.public.Contractor.select("id")
+      .where((contractor) => contractor.document.eq(documentNumber))
+      .first()
+      .then((contractor) => contractor?.id);
+
+    if (!contractorId) {
+      contractorId = await db.orm.public.Contractor
+        .create({ ...nfseData.contractor })
+        .then((contractor) => contractor.id);
+    }
+
+    const newFinancialRecord = await db.orm.public.FinancialRecord.create({
+      ...nfseData.financialRecord,
+      contractorId,
+      ownerId: user.id,
+      direction: "GAIN",
+      type: "INVOICE",
+      source: "NFSe",
+    });
+
+    await db.orm.public.InvoiceMetadata.create({
+      recordId: newFinancialRecord.id,
+      ...nfseData.invoiceMetadata,
+      issWithheld: false,
+      sourceFileKey,
+    });
+
+    setResponseStatus(event, 201);
+    return { id: newFinancialRecord.id, type: "INVOICE" };
+  } catch (error) {
+    try {
+      await storage.send(
+        new DeleteObjectCommand({
+          Bucket: config.s3.bucket,
+          Key: sourceFileKey,
+        }),
+      );
+    } catch (cleanupError) {
+      console.error(
+        "Failed to remove an unreferenced invoice XML object.",
+        safeErrorName(cleanupError),
+      );
+    }
+
+    console.error(
+      uploaded
+        ? "Invoice record persistence failed."
+        : "Invoice XML upload to object storage failed.",
+      safeErrorName(error),
+    );
+    throw createError({
+      status: uploaded ? 500 : 502,
+      statusText: uploaded ? "Internal Server Error" : "Bad Gateway",
+      message: uploaded
+        ? "The invoice record could not be created."
+        : "The invoice file could not be stored.",
+    });
+  } finally {
+    storage.destroy();
+  }
+}
+
+function safeErrorName(error: unknown): string {
+  return error instanceof Error ? error.name : "UnknownError";
+}
+
+async function readInvoiceXml(event: Parameters<typeof getAuthenticatedUser>[0]) {
+  const contentLength = getRequestHeader(event, "content-length");
+  if (contentLength && Number(contentLength) > MAX_INVOICE_XML_BYTES) {
+    throw createError({
+      status: 413,
+      statusText: "Payload Too Large",
+      message: "The invoice XML file must be 5 MB or smaller.",
+    });
+  }
+
+  const chunks: Buffer[] = [];
+  let size = 0;
+  for await (const chunk of event.node.req) {
+    const bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+    size += bytes.byteLength;
+    if (size > MAX_INVOICE_XML_BYTES) {
+      throw createError({
+        status: 413,
+        statusText: "Payload Too Large",
+        message: "The invoice XML file must be 5 MB or smaller.",
+      });
+    }
+    chunks.push(bytes);
+  }
+
+  if (size === 0) {
+    throw createError({
+      status: 400,
+      statusText: "Bad Request",
+      message: "An invoice XML document is required.",
+    });
+  }
+
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(
+      Buffer.concat(chunks),
+    );
+  } catch {
+    throw createError({
+      status: 400,
+      statusText: "Bad Request",
+      message: "The invoice XML must use UTF-8 encoding.",
+    });
+  }
+}
 
 function parseManualAmount(value: unknown): string | null {
   let amountText: string;

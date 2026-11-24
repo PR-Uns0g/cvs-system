@@ -8,6 +8,12 @@ export default defineNuxtConfig({
   modules: ["@primevue/nuxt-module"],
   runtimeConfig: {
     kratosInternalUrl: "http://kratos:4433",
+    s3: {
+      endpoint: "",
+      bucket: "",
+      accessKey: "",
+      secretKey: "",
+    },
     public: {
       appUrl: "http://localhost:3000",
       kratosBrowserUrl: "http://localhost:4433",

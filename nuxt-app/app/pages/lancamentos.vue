@@ -64,20 +64,18 @@ const setActiveInputMode = (mode: "invoice" | "manual") => {
 const handleCreateFileChange = (event: Event) => {
   selectedFile.value = (event.target as HTMLInputElement).files?.[0] || null;
 };
-const submitRecord = async (body: Record<string, string>) => {
+const submitRecord = async (body: Record<string, string> | Blob) => {
   submitting.value = true;
   submissionError.value = "";
   submissionMessage.value = "";
 
   try {
-    const response = await $fetch("/api/records", {
+    await $fetch("/api/records", {
       method: "POST",
       body,
     });
-    console.log("Received records API response:", response);
-    submissionMessage.value = "Solicitação enviada. Confira o console para ver a resposta da API.";
+    submissionMessage.value = "Solicitação enviada.";
   } catch (error) {
-    console.error("Record submission failed:", error);
     submissionError.value =
       error instanceof Error ? error.message : "Não foi possível enviar o lançamento.";
   } finally {
@@ -98,21 +96,14 @@ const submitInvoiceRecord = async () => {
     return;
   }
 
-  let xml: string;
-  try {
-    xml = await selectedFile.value.text();
-  } catch (error) {
-    console.error("Could not read the selected invoice file:", error);
-    submissionError.value = "Não foi possível ler o arquivo XML selecionado.";
+  if (selectedFile.value.size > 5_000_000) {
+    submissionError.value = "O arquivo XML deve ter no máximo 5 MB.";
     return;
   }
 
-  await submitRecord({
-    type: "INVOICE",
-    source: "nf",
-    fileName: selectedFile.value.name,
-    xml,
-  });
+  await submitRecord(
+    new Blob([selectedFile.value], { type: "application/xml" }),
+  );
 };
 const submitActiveRecord = () =>
   activeInputMode.value === "invoice" ? submitInvoiceRecord() : submitManualRecord();

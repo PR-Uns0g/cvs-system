@@ -18,6 +18,7 @@
     "db:migrate:dev": "prisma db migrate --advance-ref db"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1176.0",
     "@fontsource-variable/manrope": "^5.2.8",
     "@primeuix/themes": "^2.0.3",
     "@primevue/nuxt-module": "^4.5.4",
