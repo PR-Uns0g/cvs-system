@@ -1,41 +1,26 @@
 <script setup lang="ts">
-import type { Contractor, LaunchEntry, TaxDetail } from "~/types/domain";
+import type { LaunchEntry, TaxDetail } from "~/types/domain";
 
 useHead({ title: "Lançamentos | CVS System" });
 
 const entries = ref<LaunchEntry[]>([]);
-const contractors = ref<Contractor[]>([]);
-const showCreateForm = ref(false);
-const showManualForm = ref(false);
-const selectedFile = ref<File | null>(null);
-const createForm = reactive({ contractorRevenue: "" });
+const showRecordForm = ref(false);
+const activeInputMode = ref<"invoice" | "manual">("invoice");
+const selectedFile = shallowRef<File | null>(null);
 const manualForm = reactive({
-  contractorId: "",
-  nfValue: "",
-  contractorRevenue: "",
-  emissionDate: "",
-  pis: "",
-  cofins: "",
-  inss: "",
-  ir: "",
-  csll: "",
-  iss: "",
-  other: "",
+  amount: "",
+  source: "",
+  description: "",
+  direction: "GAIN" as "GAIN" | "LOSS",
 });
-const taxFields = [
-  ["PIS", "pis"],
-  ["COFINS", "cofins"],
-  ["INSS", "inss"],
-  ["IR", "ir"],
-  ["CSLL", "csll"],
-  ["ISS", "iss"],
-  ["Other", "other"],
-] as const;
 const search = ref("");
 const currentPage = ref(1);
 const pageSize = 10;
 const expandedTaxesId = ref<string | number | null>(null);
 const pending = ref(false);
+const submitting = ref(false);
+const submissionError = ref("");
+const submissionMessage = ref("");
 const fileName = computed(() => selectedFile.value?.name || "Selecione o XML da nota");
 const filteredEntries = computed(() => {
   const term = search.value.trim().toLowerCase();
@@ -68,17 +53,70 @@ watch(search, () => (currentPage.value = 1));
 watch(filteredEntries, () => {
   if (currentPage.value > totalPages.value) currentPage.value = totalPages.value;
 });
-const toggleCreateForm = () => {
-  showCreateForm.value = !showCreateForm.value;
-  if (showCreateForm.value) showManualForm.value = false;
+const toggleRecordForm = () => {
+  showRecordForm.value = !showRecordForm.value;
 };
-const toggleManualForm = () => {
-  showManualForm.value = !showManualForm.value;
-  if (showManualForm.value) showCreateForm.value = false;
+const setActiveInputMode = (mode: "invoice" | "manual") => {
+  activeInputMode.value = mode;
+  submissionError.value = "";
+  submissionMessage.value = "";
 };
 const handleCreateFileChange = (event: Event) => {
   selectedFile.value = (event.target as HTMLInputElement).files?.[0] || null;
 };
+const submitRecord = async (body: Record<string, string>) => {
+  submitting.value = true;
+  submissionError.value = "";
+  submissionMessage.value = "";
+
+  try {
+    const response = await $fetch("/api/records", {
+      method: "POST",
+      body,
+    });
+    console.log("Received records API response:", response);
+    submissionMessage.value = "Solicitação enviada. Confira o console para ver a resposta da API.";
+  } catch (error) {
+    console.error("Record submission failed:", error);
+    submissionError.value =
+      error instanceof Error ? error.message : "Não foi possível enviar o lançamento.";
+  } finally {
+    submitting.value = false;
+  }
+};
+const submitManualRecord = () =>
+  submitRecord({
+    type: "MANUAL",
+    amount: manualForm.amount,
+    direction: manualForm.direction,
+    source: manualForm.source,
+    description: manualForm.description,
+  });
+const submitInvoiceRecord = async () => {
+  if (!selectedFile.value) {
+    submissionError.value = "Selecione um arquivo XML antes de enviar.";
+    return;
+  }
+
+  let xml: string;
+  try {
+    xml = await selectedFile.value.text();
+  } catch (error) {
+    console.error("Could not read the selected invoice file:", error);
+    submissionError.value = "Não foi possível ler o arquivo XML selecionado.";
+    return;
+  }
+
+  await submitRecord({
+    type: "INVOICE",
+    source: "nf",
+    fileName: selectedFile.value.name,
+    xml,
+  });
+};
+const submitActiveRecord = () =>
+  activeInputMode.value === "invoice" ? submitInvoiceRecord() : submitManualRecord();
+
 const toggleTaxes = (entryId: string | number) => {
   expandedTaxesId.value = expandedTaxesId.value === entryId ? null : entryId;
 };
@@ -98,121 +136,151 @@ const formatAliquotaSobreNf = (tax: TaxDetail, nf: number) =>
 
 <template>
   <AppPageShell eyebrow="Operação" title="Lançamentos"
-    subtitle="Prévia visual para importar XMLs e acompanhar lançamentos.">
+    subtitle="Envie notas fiscais por XML ou registre lançamentos manualmente.">
     <template #actions>
       <div class="launch-actions">
-        <button type="button" :class="['secondary-action', { 'page-shell__cta--danger': showManualForm }]"
-          @click="toggleManualForm">
-          <i :class="showManualForm ? 'pi pi-times' : 'pi pi-pencil'" />
-          <span>{{ showManualForm ? "Fechar formulário" : "Lançamento manual" }}</span>
-        </button>
-        <button type="button" :class="[
-          'page-shell__cta',
-          { 'page-shell__cta--danger': showCreateForm },
-        ]" @click="toggleCreateForm">
-          <i :class="showCreateForm ? 'pi pi-times' : 'pi pi-upload'" />
-          <span>{{ showCreateForm ? "Fechar cadastro" : "Enviar XML" }}</span>
+        <button
+          type="button"
+          :class="['page-shell__cta', { 'page-shell__cta--danger': showRecordForm }]"
+          @click="toggleRecordForm"
+        >
+          <i :class="showRecordForm ? 'pi pi-times' : 'pi pi-plus'" />
+          <span>{{ showRecordForm ? "Fechar formulário" : "Novo lançamento" }}</span>
         </button>
       </div>
     </template>
 
     <Transition name="expand-fade">
-      <form v-if="showCreateForm" class="panel-card launch-form-card" @submit.prevent>
+      <form
+        v-if="showRecordForm"
+        class="panel-card launch-form-card"
+        @submit.prevent="submitActiveRecord"
+      >
+        <div class="record-mode-tabs" role="group" aria-label="Modo de cadastro">
+          <button
+            type="button"
+            class="record-mode-tabs__tab"
+            :class="{ 'record-mode-tabs__tab--active': activeInputMode === 'invoice' }"
+            :aria-pressed="activeInputMode === 'invoice'"
+            @click="setActiveInputMode('invoice')"
+          >
+            <i class="pi pi-upload" />
+            <span>Enviar XML</span>
+          </button>
+          <button
+            type="button"
+            class="record-mode-tabs__tab"
+            :class="{ 'record-mode-tabs__tab--active': activeInputMode === 'manual' }"
+            :aria-pressed="activeInputMode === 'manual'"
+            @click="setActiveInputMode('manual')"
+          >
+            <i class="pi pi-pencil" />
+            <span>Preencher manualmente</span>
+          </button>
+        </div>
+
         <div class="section-header">
           <div>
             <p class="section-header__eyebrow">Novo lançamento</p>
-            <h2>Importação da nota</h2>
+            <h2>{{ activeInputMode === "invoice" ? "Importação da nota" : "Cadastro manual" }}</h2>
           </div>
         </div>
 
-        <p class="launch-form-hint">
-          O contratante é identificado a partir do XML da nota. Informe o
-          faturamento declarado.
-        </p>
+        <div v-if="activeInputMode === 'invoice'" class="record-mode-panel">
+          <p class="launch-form-hint">
+            Envie o XML da nota. A origem será definida automaticamente como “nf”.
+          </p>
+          <div class="launch-form-layout">
+            <label class="upload-dropzone upload-dropzone--input">
+              <input
+                type="file"
+                accept=".xml,application/xml,text/xml"
+                required
+                hidden
+                @change="handleCreateFileChange"
+              />
+              <i class="pi pi-file-arrow-up" />
+              <strong>{{ fileName }}</strong>
+              <p>Clique para selecionar o XML da nota.</p>
+            </label>
+          </div>
+        </div>
 
-        <div class="launch-form-layout">
-          <label class="upload-dropzone upload-dropzone--input">
-            <input type="file" accept=".xml" hidden @change="handleCreateFileChange" />
-            <i class="pi pi-file-arrow-up" />
-            <strong>{{ fileName }}</strong>
-            <p>Clique para selecionar o XML da nota.</p>
-          </label>
-
-          <div class="launch-form-side">
+        <div v-else class="record-mode-panel">
+          <p class="launch-form-hint">
+            Informe os dados do lançamento manual. Não há contratante associado.
+          </p>
+          <div class="manual-form-grid">
             <label class="mock-field">
-              <span>Faturamento do contratante</span>
-              <input v-model="createForm.contractorRevenue" class="mock-input" placeholder="Ex.: 148000.00" required />
+              <span>Tipo*</span>
+              <select v-model="manualForm.direction" class="mock-input" required>
+                <option value="GAIN">Entrada</option>
+                <option value="LOSS">Saída</option>
+              </select>
+            </label>
+
+            <label class="mock-field">
+              <span>Valor*</span>
+              <input
+                v-model.trim="manualForm.amount"
+                class="mock-input"
+                type="number"
+                min="0.01"
+                step="0.01"
+                inputmode="decimal"
+                required
+              />
+            </label>
+
+            <label class="mock-field">
+              <span>Origem*</span>
+              <input
+                v-model.trim="manualForm.source"
+                class="mock-input"
+                type="text"
+                required
+                placeholder="Ex: dívida, pagamento, familiar, etc."
+              />
+            </label>
+
+            <label class="mock-field">
+              <span>Descrição</span>
+              <textarea
+                v-model.trim="manualForm.description"
+                class="mock-input"
+                placeholder="Pagamento recebido pelo fulano de tal"
+              />
             </label>
           </div>
         </div>
 
         <div class="form-actions">
-          <button type="button" class="page-shell__cta" disabled>
+          <button
+            type="submit"
+            class="page-shell__cta"
+            :disabled="submitting || (activeInputMode === 'invoice' && !selectedFile)"
+          >
             <i class="pi pi-check" />
-            <span>Salvar lançamento</span>
+            <span>
+              {{
+                submitting
+                  ? "Enviando..."
+                  : activeInputMode === "invoice"
+                    ? "Enviar XML"
+                    : "Enviar lançamento manual"
+              }}
+            </span>
           </button>
         </div>
       </form>
     </Transition>
 
-    <Transition name="expand-fade">
-      <form v-if="showManualForm" class="panel-card launch-form-card" @submit.prevent>
-        <div class="section-header">
-          <div>
-            <p class="section-header__eyebrow">Novo lançamento</p>
-            <h2>Cadastro manual</h2>
-          </div>
-        </div>
-
-        <p class="launch-form-hint">
-          Prévia visual: o formulário não está conectado a dados e não salva alterações.
-        </p>
-
-        <div class="manual-form-grid">
-          <label class="mock-field manual-form-grid__wide">
-            <span>Contratante</span>
-            <select v-model="manualForm.contractorId" class="mock-input" :disabled="!contractors.length">
-              <option value="" disabled>Selecione um contratante</option>
-              <option v-for="contractor in contractors" :key="contractor.id" :value="contractor.id">
-                {{ contractor.legalName }}
-              </option>
-            </select>
-          </label>
-
-          <label class="mock-field">
-            <span>Valor da NF</span>
-            <input v-model.trim="manualForm.nfValue" class="mock-input" inputmode="decimal" />
-          </label>
-
-          <label class="mock-field">
-            <span>Faturamento do contratante</span>
-            <input v-model.trim="manualForm.contractorRevenue" class="mock-input" inputmode="decimal" />
-          </label>
-
-          <label class="mock-field manual-form-grid__wide">
-            <span>Data de emissão</span>
-            <input v-model="manualForm.emissionDate" class="mock-input" type="datetime-local" />
-          </label>
-        </div>
-
-        <div class="tax-section">
-          <p class="section-header__eyebrow">Impostos</p>
-          <div class="tax-section__grid">
-            <label v-for="[label, key] in taxFields" :key="key" class="mock-field">
-              <span>{{ label }}</span>
-              <input v-model.trim="manualForm[key]" class="mock-input" inputmode="decimal" />
-            </label>
-          </div>
-        </div>
-
-        <div class="form-actions">
-          <button type="button" class="page-shell__cta" disabled>
-            <i class="pi pi-check" />
-            <span>Salvar lançamento manual</span>
-          </button>
-        </div>
-      </form>
-    </Transition>
+    <p v-if="submissionError" class="launch-form-message launch-form-message--error" role="alert">
+      {{ submissionError }}
+    </p>
+    <p v-if="submissionMessage" class="launch-form-message" role="status">
+      {{ submissionMessage }}
+    </p>
 
     <section class="panel-card filter-strip">
       <div class="filter-strip__item">
@@ -227,7 +295,7 @@ const formatAliquotaSobreNf = (tax: TaxDetail, nf: number) =>
         <div>
           <strong>Os lançamentos não estão conectados a uma fonte de dados.</strong>
           <p>
-            A importação será habilitada quando o serviço for reconstruído.
+            Os envios são encaminhados à API, mas ainda não são persistidos.
           </p>
         </div>
       </div>
@@ -390,6 +458,42 @@ const formatAliquotaSobreNf = (tax: TaxDetail, nf: number) =>
   gap: 1.25rem;
 }
 
+.record-mode-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  border-bottom: 1px solid rgba(20, 32, 19, 0.1);
+}
+
+.record-mode-tabs__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  padding: 0.75rem 1rem;
+}
+
+.record-mode-tabs__tab--active {
+  border-bottom-color: var(--color-brand-strong);
+  color: var(--color-brand-strong);
+}
+
+.record-mode-tabs__tab:focus-visible {
+  outline: 2px solid var(--color-brand-strong);
+  outline-offset: -2px;
+}
+
+.record-mode-panel {
+  display: grid;
+  gap: 1rem;
+}
+
 .launch-actions {
   display: flex;
   flex-wrap: wrap;
@@ -407,29 +511,21 @@ const formatAliquotaSobreNf = (tax: TaxDetail, nf: number) =>
 .launch-form-layout {
   display: grid;
   gap: 1rem;
-  grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.9fr);
 }
 
-.launch-form-side {
-  display: grid;
-  align-content: start;
-  gap: 1rem;
-}
-
-.manual-form-grid,
-.tax-section__grid {
+.manual-form-grid {
   display: grid;
   gap: 1rem;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.manual-form-grid__wide {
-  grid-column: 1 / -1;
+.launch-form-message {
+  margin: 0;
+  color: var(--color-brand-strong);
 }
 
-.tax-section {
-  display: grid;
-  gap: 0.75rem;
+.launch-form-message--error {
+  color: #ab3030;
 }
 
 .upload-dropzone--input {
@@ -611,7 +707,6 @@ const formatAliquotaSobreNf = (tax: TaxDetail, nf: number) =>
 
   .launch-form-layout,
   .manual-form-grid,
-  .tax-section__grid,
   .tax-grid {
     grid-template-columns: 1fr;
   }
