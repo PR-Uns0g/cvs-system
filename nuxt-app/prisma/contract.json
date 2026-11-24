@@ -312,16 +312,6 @@
                   "kind": "scalar"
                 }
               },
-              "occurredAt": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/timestamptz-date@1",
-                  "kind": "scalar",
-                  "typeParams": {
-                    "precision": 3
-                  }
-                }
-              },
               "ownerId": {
                 "nullable": false,
                 "type": {
@@ -330,7 +320,7 @@
                 }
               },
               "source": {
-                "nullable": true,
+                "nullable": false,
                 "type": {
                   "codecId": "pg/text@1",
                   "kind": "scalar"
@@ -430,9 +420,6 @@
                 "id": {
                   "column": "id"
                 },
-                "occurredAt": {
-                  "column": "occurred_at"
-                },
                 "ownerId": {
                   "column": "owner_id"
                 },
@@ -452,7 +439,21 @@
           },
           "InvoiceMetadata": {
             "fields": {
-              "contractorRevenue": {
+              "extra": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/json@1",
+                  "kind": "scalar"
+                }
+              },
+              "invoiceExternalId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "issAmount": {
                 "nullable": false,
                 "type": {
                   "codecId": "pg/numeric@1",
@@ -463,11 +464,42 @@
                   }
                 }
               },
-              "invoiceFileKey": {
-                "nullable": true,
+              "issRate": {
+                "nullable": false,
                 "type": {
-                  "codecId": "pg/text@1",
+                  "codecId": "pg/numeric@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 5,
+                    "scale": 2
+                  }
+                }
+              },
+              "issWithheld": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
                   "kind": "scalar"
+                }
+              },
+              "issuedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-date@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 3
+                  }
+                }
+              },
+              "occuredAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-date@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 3
+                  }
                 }
               },
               "recordId": {
@@ -477,19 +509,15 @@
                   "kind": "scalar"
                 }
               },
-              "representativeEarning": {
+              "sourceFileKey": {
                 "nullable": false,
                 "type": {
-                  "codecId": "pg/numeric@1",
-                  "kind": "scalar",
-                  "typeParams": {
-                    "precision": 10,
-                    "scale": 2
-                  }
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
                 }
               },
               "taxes": {
-                "nullable": true,
+                "nullable": false,
                 "type": {
                   "codecId": "pg/json@1",
                   "kind": "scalar"
@@ -526,17 +554,32 @@
             },
             "storage": {
               "fields": {
-                "contractorRevenue": {
-                  "column": "contractor_revenue"
+                "extra": {
+                  "column": "extra"
                 },
-                "invoiceFileKey": {
-                  "column": "invoice_file_key"
+                "invoiceExternalId": {
+                  "column": "invoice_external_id"
+                },
+                "issAmount": {
+                  "column": "iss_amount"
+                },
+                "issRate": {
+                  "column": "iss_rate"
+                },
+                "issWithheld": {
+                  "column": "iss_withheld"
+                },
+                "issuedAt": {
+                  "column": "issued_at"
+                },
+                "occuredAt": {
+                  "column": "occured_at"
                 },
                 "recordId": {
                   "column": "record_id"
                 },
-                "representativeEarning": {
-                  "column": "representative_earning"
+                "sourceFileKey": {
+                  "column": "source_file_key"
                 },
                 "taxes": {
                   "column": "taxes"
@@ -560,7 +603,17 @@
           "table": {
             "InvoiceMetadata": {
               "columns": {
-                "contractor_revenue": {
+                "extra": {
+                  "codecId": "pg/json@1",
+                  "dataType": "pg/json",
+                  "nullable": true
+                },
+                "invoice_external_id": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "iss_amount": {
                   "codecId": "pg/numeric@1",
                   "dataType": "pg/numeric",
                   "nullable": false,
@@ -569,29 +622,50 @@
                     "scale": 2
                   }
                 },
-                "invoice_file_key": {
-                  "codecId": "pg/text@1",
-                  "dataType": "pg/text",
-                  "nullable": true
+                "iss_rate": {
+                  "codecId": "pg/numeric@1",
+                  "dataType": "pg/numeric",
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 5,
+                    "scale": 2
+                  }
+                },
+                "iss_withheld": {
+                  "codecId": "pg/bool@1",
+                  "dataType": "pg/bool",
+                  "nullable": false
+                },
+                "issued_at": {
+                  "codecId": "pg/timestamptz-date@1",
+                  "dataType": "pg/timestamptz",
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 3
+                  }
+                },
+                "occured_at": {
+                  "codecId": "pg/timestamptz-date@1",
+                  "dataType": "pg/timestamptz",
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 3
+                  }
                 },
                 "record_id": {
                   "codecId": "pg/uuid@1",
                   "dataType": "pg/uuid",
                   "nullable": false
                 },
-                "representative_earning": {
-                  "codecId": "pg/numeric@1",
-                  "dataType": "pg/numeric",
-                  "nullable": false,
-                  "typeParams": {
-                    "precision": 10,
-                    "scale": 2
-                  }
+                "source_file_key": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
                 },
                 "taxes": {
                   "codecId": "pg/json@1",
                   "dataType": "pg/json",
-                  "nullable": true
+                  "nullable": false
                 },
                 "uploaded_at": {
                   "codecId": "pg/timestamptz-date@1",
@@ -637,7 +711,7 @@
               "uniques": [
                 {
                   "columns": [
-                    "invoice_file_key"
+                    "invoice_external_id"
                   ]
                 }
               ]
@@ -860,14 +934,6 @@
                   "dataType": "pg/uuid",
                   "nullable": false
                 },
-                "occurred_at": {
-                  "codecId": "pg/timestamptz-date@1",
-                  "dataType": "pg/timestamptz",
-                  "nullable": false,
-                  "typeParams": {
-                    "precision": 3
-                  }
-                },
                 "owner_id": {
                   "codecId": "pg/uuid@1",
                   "dataType": "pg/uuid",
@@ -876,7 +942,7 @@
                 "source": {
                   "codecId": "pg/text@1",
                   "dataType": "pg/text",
-                  "nullable": true
+                  "nullable": false
                 },
                 "type": {
                   "codecId": "pg/text@1",
@@ -958,15 +1024,6 @@
                   "name": "financial_records_owner_id_idx_ade9f347",
                   "prefix": "financial_records_owner_id_idx",
                   "unique": false
-                },
-                {
-                  "columns": [
-                    "owner_id",
-                    "occurred_at"
-                  ],
-                  "name": "financial_records_owner_id_occurred_at_idx_403f39d6",
-                  "prefix": "financial_records_owner_id_occurred_at_idx",
-                  "unique": false
                 }
               ],
               "primaryKey": {
@@ -1012,7 +1069,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "1b4c87ba635daa87be471a837c04664f54b0cb3101862f742d302471205f3d89"
+    "storageHash": "96df1ac95c26b96fce468d12b7279ad88b1abc74c69b1be56b3deae9fad31413"
   },
   "execution": {
     "executionHash": "ac05b5062fdd4c52dd29b8e82d0f86ba8969bca0b6e6faf1f4e128d5adaa55a4",

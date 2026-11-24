@@ -1,0 +1,1047 @@
+[
+  {
+    "id": "dropConstraint.InvoiceMetadata.InvoiceMetadata_invoice_file_key_key",
+    "label": "Drop constraint \"InvoiceMetadata_invoice_file_key_key\" on \"InvoiceMetadata\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "InvoiceMetadata_invoice_file_key_key",
+        "table": "InvoiceMetadata"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"InvoiceMetadata_invoice_file_key_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "InvoiceMetadata_invoice_file_key_key",
+          "public",
+          "\"public\".\"InvoiceMetadata\""
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "constraint \"InvoiceMetadata_invoice_file_key_key\" on \"InvoiceMetadata\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop constraint \"InvoiceMetadata_invoice_file_key_key\"",
+        "sql": "ALTER TABLE \"public\".\"InvoiceMetadata\" DROP CONSTRAINT \"InvoiceMetadata_invoice_file_key_key\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"InvoiceMetadata_invoice_file_key_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "InvoiceMetadata_invoice_file_key_key",
+          "public",
+          "\"public\".\"InvoiceMetadata\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "constraint \"InvoiceMetadata_invoice_file_key_key\" on \"InvoiceMetadata\""
+        }
+      }
+    ]
+  },
+  {
+    "id": "dropColumn.InvoiceMetadata.contractor_revenue",
+    "label": "Drop column \"contractor_revenue\" from \"InvoiceMetadata\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "contractor_revenue",
+        "table": "InvoiceMetadata"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"contractor_revenue\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "contractor_revenue"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"contractor_revenue\" on \"InvoiceMetadata\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop column \"contractor_revenue\"",
+        "sql": "ALTER TABLE \"public\".\"InvoiceMetadata\" DROP COLUMN \"contractor_revenue\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"contractor_revenue\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "contractor_revenue"
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "column \"contractor_revenue\" on \"InvoiceMetadata\""
+        }
+      }
+    ]
+  },
+  {
+    "id": "dropColumn.InvoiceMetadata.representative_earning",
+    "label": "Drop column \"representative_earning\" from \"InvoiceMetadata\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "representative_earning",
+        "table": "InvoiceMetadata"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"representative_earning\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "representative_earning"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"representative_earning\" on \"InvoiceMetadata\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop column \"representative_earning\"",
+        "sql": "ALTER TABLE \"public\".\"InvoiceMetadata\" DROP COLUMN \"representative_earning\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"representative_earning\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "representative_earning"
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "column \"representative_earning\" on \"InvoiceMetadata\""
+        }
+      }
+    ]
+  },
+  {
+    "id": "dropColumn.InvoiceMetadata.invoice_file_key",
+    "label": "Drop column \"invoice_file_key\" from \"InvoiceMetadata\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "invoice_file_key",
+        "table": "InvoiceMetadata"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"invoice_file_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "invoice_file_key"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"invoice_file_key\" on \"InvoiceMetadata\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop column \"invoice_file_key\"",
+        "sql": "ALTER TABLE \"public\".\"InvoiceMetadata\" DROP COLUMN \"invoice_file_key\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"invoice_file_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "invoice_file_key"
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "column \"invoice_file_key\" on \"InvoiceMetadata\""
+        }
+      }
+    ]
+  },
+  {
+    "id": "dropIndex.financial_records.financial_records_owner_id_occurred_at_idx_403f39d6",
+    "label": "Drop index \"financial_records_owner_id_occurred_at_idx_403f39d6\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "financial_records_owner_id_occurred_at_idx_403f39d6",
+        "table": "financial_records"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"financial_records_owner_id_occurred_at_idx_403f39d6\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"financial_records_owner_id_occurred_at_idx_403f39d6\""
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "index \"financial_records_owner_id_occurred_at_idx_403f39d6\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop index \"financial_records_owner_id_occurred_at_idx_403f39d6\"",
+        "sql": "DROP INDEX \"public\".\"financial_records_owner_id_occurred_at_idx_403f39d6\"",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"financial_records_owner_id_occurred_at_idx_403f39d6\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"financial_records_owner_id_occurred_at_idx_403f39d6\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "index \"financial_records_owner_id_occurred_at_idx_403f39d6\""
+        }
+      }
+    ]
+  },
+  {
+    "id": "dropColumn.financial_records.occurred_at",
+    "label": "Drop column \"occurred_at\" from \"financial_records\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "occurred_at",
+        "table": "financial_records"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"occurred_at\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "financial_records",
+          "occurred_at"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"occurred_at\" on \"financial_records\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop column \"occurred_at\"",
+        "sql": "ALTER TABLE \"public\".\"financial_records\" DROP COLUMN \"occurred_at\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"occurred_at\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "financial_records",
+          "occurred_at"
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "column \"occurred_at\" on \"financial_records\""
+        }
+      }
+    ]
+  },
+  {
+    "id": "column.public.InvoiceMetadata.extra",
+    "label": "Add column \"extra\" to \"InvoiceMetadata\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "extra",
+        "table": "InvoiceMetadata"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"extra\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "extra"
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "column \"extra\" on \"InvoiceMetadata\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"extra\"",
+        "sql": "ALTER TABLE \"public\".\"InvoiceMetadata\" ADD COLUMN \"extra\" json"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"extra\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "extra"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"extra\" on \"InvoiceMetadata\""
+        }
+      },
+      {
+        "description": "verify column \"extra\" has type \"json\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_attribute\" AS \"a\" INNER JOIN \"pg_class\" AS \"c\" ON \"c\".\"oid\" = \"a\".\"attrelid\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"a\".\"attname\" = $3 AND (format_type(\"a\".\"atttypid\", \"a\".\"atttypmod\")) = $4 AND NOT (\"a\".\"attisdropped\"))) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "extra",
+          "json"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "alterNullability.setNotNull.InvoiceMetadata.taxes",
+    "label": "Set NOT NULL on \"InvoiceMetadata\".\"taxes\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "taxes",
+        "table": "InvoiceMetadata"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"taxes\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "taxes"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"taxes\" on \"InvoiceMetadata\""
+        }
+      },
+      {
+        "description": "ensure no NULL values in \"taxes\"",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"public\".\"InvoiceMetadata\" WHERE \"taxes\" IS NULL) AS \"result\"",
+        "params": [],
+        "meta": {
+          "requiredColumn": {
+            "table": "InvoiceMetadata",
+            "column": "taxes",
+            "reason": "nullValues"
+          }
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "set NOT NULL on \"taxes\"",
+        "sql": "ALTER TABLE \"public\".\"InvoiceMetadata\" ALTER COLUMN \"taxes\" SET NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"taxes\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "taxes",
+          "NO"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.InvoiceMetadata.invoice_external_id",
+    "label": "Add column invoice_external_id to InvoiceMetadata",
+    "summary": "Adds column invoice_external_id to table InvoiceMetadata",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "invoice_external_id",
+        "table": "InvoiceMetadata"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"invoice_external_id\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "invoice_external_id"
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "column \"invoice_external_id\" on \"InvoiceMetadata\""
+        }
+      },
+      {
+        "description": "ensure table \"InvoiceMetadata\" is empty before adding NOT NULL column without default",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"public\".\"InvoiceMetadata\" LIMIT 1) AS \"result\"",
+        "params": [],
+        "meta": {
+          "requiredColumn": {
+            "table": "InvoiceMetadata",
+            "column": "invoice_external_id",
+            "reason": "newField"
+          }
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"invoice_external_id\"",
+        "sql": "ALTER TABLE \"public\".\"InvoiceMetadata\" ADD COLUMN \"invoice_external_id\" text NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"invoice_external_id\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "invoice_external_id"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"invoice_external_id\" on \"InvoiceMetadata\""
+        }
+      },
+      {
+        "description": "verify column \"invoice_external_id\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "invoice_external_id",
+          "NO"
+        ]
+      },
+      {
+        "description": "verify column \"invoice_external_id\" has type \"text\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_attribute\" AS \"a\" INNER JOIN \"pg_class\" AS \"c\" ON \"c\".\"oid\" = \"a\".\"attrelid\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"a\".\"attname\" = $3 AND (format_type(\"a\".\"atttypid\", \"a\".\"atttypmod\")) = $4 AND NOT (\"a\".\"attisdropped\"))) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "invoice_external_id",
+          "text"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.InvoiceMetadata.iss_amount",
+    "label": "Add column iss_amount to InvoiceMetadata",
+    "summary": "Adds column iss_amount to table InvoiceMetadata",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "InvoiceMetadata"
+      }
+    },
+    "operationClass": "additive",
+    "precheck": [
+      {
+        "description": "ensure column \"iss_amount\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "iss_amount"
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "column \"iss_amount\" on \"InvoiceMetadata\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"iss_amount\"",
+        "sql": "ALTER TABLE \"public\".\"InvoiceMetadata\" ADD COLUMN \"iss_amount\" numeric(10,2) DEFAULT (0) NOT NULL"
+      },
+      {
+        "description": "drop temporary default from column \"iss_amount\"",
+        "sql": "ALTER TABLE \"public\".\"InvoiceMetadata\" ALTER COLUMN \"iss_amount\" DROP DEFAULT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"iss_amount\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "iss_amount"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"iss_amount\" on \"InvoiceMetadata\""
+        }
+      },
+      {
+        "description": "verify column \"iss_amount\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "iss_amount",
+          "NO"
+        ]
+      },
+      {
+        "description": "verify column \"iss_amount\" has no default after temporary default removal",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"column_default\" IS NOT NULL)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "iss_amount"
+        ]
+      },
+      {
+        "description": "verify column \"iss_amount\" has type \"numeric(10,2)\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_attribute\" AS \"a\" INNER JOIN \"pg_class\" AS \"c\" ON \"c\".\"oid\" = \"a\".\"attrelid\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"a\".\"attname\" = $3 AND (format_type(\"a\".\"atttypid\", \"a\".\"atttypmod\")) = $4 AND NOT (\"a\".\"attisdropped\"))) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "iss_amount",
+          "numeric(10,2)"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.InvoiceMetadata.iss_rate",
+    "label": "Add column iss_rate to InvoiceMetadata",
+    "summary": "Adds column iss_rate to table InvoiceMetadata",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "InvoiceMetadata"
+      }
+    },
+    "operationClass": "additive",
+    "precheck": [
+      {
+        "description": "ensure column \"iss_rate\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "iss_rate"
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "column \"iss_rate\" on \"InvoiceMetadata\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"iss_rate\"",
+        "sql": "ALTER TABLE \"public\".\"InvoiceMetadata\" ADD COLUMN \"iss_rate\" numeric(5,2) DEFAULT (0) NOT NULL"
+      },
+      {
+        "description": "drop temporary default from column \"iss_rate\"",
+        "sql": "ALTER TABLE \"public\".\"InvoiceMetadata\" ALTER COLUMN \"iss_rate\" DROP DEFAULT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"iss_rate\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "iss_rate"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"iss_rate\" on \"InvoiceMetadata\""
+        }
+      },
+      {
+        "description": "verify column \"iss_rate\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "iss_rate",
+          "NO"
+        ]
+      },
+      {
+        "description": "verify column \"iss_rate\" has no default after temporary default removal",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"column_default\" IS NOT NULL)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "iss_rate"
+        ]
+      },
+      {
+        "description": "verify column \"iss_rate\" has type \"numeric(5,2)\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_attribute\" AS \"a\" INNER JOIN \"pg_class\" AS \"c\" ON \"c\".\"oid\" = \"a\".\"attrelid\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"a\".\"attname\" = $3 AND (format_type(\"a\".\"atttypid\", \"a\".\"atttypmod\")) = $4 AND NOT (\"a\".\"attisdropped\"))) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "iss_rate",
+          "numeric(5,2)"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.InvoiceMetadata.iss_withheld",
+    "label": "Add column iss_withheld to InvoiceMetadata",
+    "summary": "Adds column iss_withheld to table InvoiceMetadata",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "InvoiceMetadata"
+      }
+    },
+    "operationClass": "additive",
+    "precheck": [
+      {
+        "description": "ensure column \"iss_withheld\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "iss_withheld"
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "column \"iss_withheld\" on \"InvoiceMetadata\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"iss_withheld\"",
+        "sql": "ALTER TABLE \"public\".\"InvoiceMetadata\" ADD COLUMN \"iss_withheld\" bool DEFAULT (false) NOT NULL"
+      },
+      {
+        "description": "drop temporary default from column \"iss_withheld\"",
+        "sql": "ALTER TABLE \"public\".\"InvoiceMetadata\" ALTER COLUMN \"iss_withheld\" DROP DEFAULT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"iss_withheld\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "iss_withheld"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"iss_withheld\" on \"InvoiceMetadata\""
+        }
+      },
+      {
+        "description": "verify column \"iss_withheld\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "iss_withheld",
+          "NO"
+        ]
+      },
+      {
+        "description": "verify column \"iss_withheld\" has no default after temporary default removal",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"column_default\" IS NOT NULL)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "iss_withheld"
+        ]
+      },
+      {
+        "description": "verify column \"iss_withheld\" has type \"boolean\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_attribute\" AS \"a\" INNER JOIN \"pg_class\" AS \"c\" ON \"c\".\"oid\" = \"a\".\"attrelid\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"a\".\"attname\" = $3 AND (format_type(\"a\".\"atttypid\", \"a\".\"atttypmod\")) = $4 AND NOT (\"a\".\"attisdropped\"))) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "iss_withheld",
+          "boolean"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.InvoiceMetadata.issued_at",
+    "label": "Add column issued_at to InvoiceMetadata",
+    "summary": "Adds column issued_at to table InvoiceMetadata",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "InvoiceMetadata"
+      }
+    },
+    "operationClass": "additive",
+    "precheck": [
+      {
+        "description": "ensure column \"issued_at\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "issued_at"
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "column \"issued_at\" on \"InvoiceMetadata\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"issued_at\"",
+        "sql": "ALTER TABLE \"public\".\"InvoiceMetadata\" ADD COLUMN \"issued_at\" timestamptz(3) DEFAULT ('epoch') NOT NULL"
+      },
+      {
+        "description": "drop temporary default from column \"issued_at\"",
+        "sql": "ALTER TABLE \"public\".\"InvoiceMetadata\" ALTER COLUMN \"issued_at\" DROP DEFAULT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"issued_at\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "issued_at"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"issued_at\" on \"InvoiceMetadata\""
+        }
+      },
+      {
+        "description": "verify column \"issued_at\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "issued_at",
+          "NO"
+        ]
+      },
+      {
+        "description": "verify column \"issued_at\" has no default after temporary default removal",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"column_default\" IS NOT NULL)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "issued_at"
+        ]
+      },
+      {
+        "description": "verify column \"issued_at\" has type \"timestamp(3) with time zone\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_attribute\" AS \"a\" INNER JOIN \"pg_class\" AS \"c\" ON \"c\".\"oid\" = \"a\".\"attrelid\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"a\".\"attname\" = $3 AND (format_type(\"a\".\"atttypid\", \"a\".\"atttypmod\")) = $4 AND NOT (\"a\".\"attisdropped\"))) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "issued_at",
+          "timestamp(3) with time zone"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.InvoiceMetadata.occured_at",
+    "label": "Add column occured_at to InvoiceMetadata",
+    "summary": "Adds column occured_at to table InvoiceMetadata",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "InvoiceMetadata"
+      }
+    },
+    "operationClass": "additive",
+    "precheck": [
+      {
+        "description": "ensure column \"occured_at\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "occured_at"
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "column \"occured_at\" on \"InvoiceMetadata\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"occured_at\"",
+        "sql": "ALTER TABLE \"public\".\"InvoiceMetadata\" ADD COLUMN \"occured_at\" timestamptz(3) DEFAULT ('epoch') NOT NULL"
+      },
+      {
+        "description": "drop temporary default from column \"occured_at\"",
+        "sql": "ALTER TABLE \"public\".\"InvoiceMetadata\" ALTER COLUMN \"occured_at\" DROP DEFAULT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"occured_at\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "occured_at"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"occured_at\" on \"InvoiceMetadata\""
+        }
+      },
+      {
+        "description": "verify column \"occured_at\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "occured_at",
+          "NO"
+        ]
+      },
+      {
+        "description": "verify column \"occured_at\" has no default after temporary default removal",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"column_default\" IS NOT NULL)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "occured_at"
+        ]
+      },
+      {
+        "description": "verify column \"occured_at\" has type \"timestamp(3) with time zone\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_attribute\" AS \"a\" INNER JOIN \"pg_class\" AS \"c\" ON \"c\".\"oid\" = \"a\".\"attrelid\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"a\".\"attname\" = $3 AND (format_type(\"a\".\"atttypid\", \"a\".\"atttypmod\")) = $4 AND NOT (\"a\".\"attisdropped\"))) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "occured_at",
+          "timestamp(3) with time zone"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.InvoiceMetadata.source_file_key",
+    "label": "Add column source_file_key to InvoiceMetadata",
+    "summary": "Adds column source_file_key to table InvoiceMetadata",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "InvoiceMetadata"
+      }
+    },
+    "operationClass": "additive",
+    "precheck": [
+      {
+        "description": "ensure column \"source_file_key\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "source_file_key"
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "column \"source_file_key\" on \"InvoiceMetadata\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"source_file_key\"",
+        "sql": "ALTER TABLE \"public\".\"InvoiceMetadata\" ADD COLUMN \"source_file_key\" text DEFAULT ('') NOT NULL"
+      },
+      {
+        "description": "drop temporary default from column \"source_file_key\"",
+        "sql": "ALTER TABLE \"public\".\"InvoiceMetadata\" ALTER COLUMN \"source_file_key\" DROP DEFAULT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"source_file_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "source_file_key"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"source_file_key\" on \"InvoiceMetadata\""
+        }
+      },
+      {
+        "description": "verify column \"source_file_key\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "source_file_key",
+          "NO"
+        ]
+      },
+      {
+        "description": "verify column \"source_file_key\" has no default after temporary default removal",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"column_default\" IS NOT NULL)) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "source_file_key"
+        ]
+      },
+      {
+        "description": "verify column \"source_file_key\" has type \"text\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_attribute\" AS \"a\" INNER JOIN \"pg_class\" AS \"c\" ON \"c\".\"oid\" = \"a\".\"attrelid\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"a\".\"attname\" = $3 AND (format_type(\"a\".\"atttypid\", \"a\".\"atttypmod\")) = $4 AND NOT (\"a\".\"attisdropped\"))) AS \"result\"",
+        "params": [
+          "public",
+          "InvoiceMetadata",
+          "source_file_key",
+          "text"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.InvoiceMetadata.InvoiceMetadata_invoice_external_id_key",
+    "label": "Add unique constraint on \"InvoiceMetadata\" (invoice_external_id)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "InvoiceMetadata_invoice_external_id_key",
+        "table": "InvoiceMetadata"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"InvoiceMetadata_invoice_external_id_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "InvoiceMetadata_invoice_external_id_key",
+          "public",
+          "\"public\".\"InvoiceMetadata\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "constraint \"InvoiceMetadata_invoice_external_id_key\" on \"InvoiceMetadata\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"InvoiceMetadata_invoice_external_id_key\"",
+        "sql": "ALTER TABLE \"public\".\"InvoiceMetadata\" ADD CONSTRAINT \"InvoiceMetadata_invoice_external_id_key\" UNIQUE (\"invoice_external_id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify unique constraint \"InvoiceMetadata_invoice_external_id_key\" exists on (invoice_external_id)",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4 AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"conkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"conrelid\" AND key_attribute.attnum = key_column.attnum) = ($5)::jsonb)) AS \"result\"",
+        "params": [
+          "InvoiceMetadata_invoice_external_id_key",
+          "public",
+          "\"public\".\"InvoiceMetadata\"",
+          "u",
+          "[\"invoice_external_id\"]"
+        ]
+      }
+    ]
+  }
+]
