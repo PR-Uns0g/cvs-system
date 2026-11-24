@@ -23,6 +23,7 @@
     "@primevue/nuxt-module": "^4.5.4",
     "@prisma/orm-postgres": "^8.0.0-rc.23",
     "chart.js": "^4.5.1",
+    "fast-typed-xml": "^0.1.1",
     "nuxt": "^4.4.2",
     "primeicons": "^7.0.0",
     "primevue": "^4.5.4",
