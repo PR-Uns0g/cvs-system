@@ -24,10 +24,11 @@ The current Compose file uses these variables:
 | `KRATOS_DSN` | Kratos database connection string |
 | `MINIO_ROOT_USER` | MinIO root account |
 | `MINIO_ROOT_PASSWORD` | MinIO root password |
+| `MINIO_APP_USER` | Dedicated app user with invoice-prefix access |
+| `MINIO_APP_PASSWORD` | Secret for the dedicated MinIO app user (at least 8 characters) |
 | `MINIO_CONSOLE_PORT` | Host port for MinIO Console |
 | `MINIO_API_PORT` | Host port for the MinIO API |
 | `MINIO_BUCKET` | Bucket name supplied to the app |
-| `S3_PUBLIC_ENDPOINT` | Browser-reachable S3 endpoint, if needed |
 
 Default host ports are Nuxt `3000`, Kratos `4433`/`4434`, PostgreSQL `5432`,
 and MinIO Console/API `9001`/`9002`. Override them in `infra/.env` as needed.
@@ -97,4 +98,16 @@ Authentication and initial app tables are wired. Contractor and financial
 record screens are still partly visual scaffolding and are not all connected
 to persistent APIs. 
 
-MinIO is present in Compose, but invoice upload, extraction, and private file access are not yet implemented.
+The Nuxt service uses a separate MinIO app identity, not the MinIO root account.
+Set `MINIO_APP_USER` and `MINIO_APP_PASSWORD` in the ignored `infra/.env` file
+to strong, unique values (the secret must be at least 8 characters). Compose
+creates the private bucket and grants this identity only `PutObject` and
+`DeleteObject` access under the `invoices/` prefix. Do not reuse the root
+credentials for the app.
+
+Invoice XML is sent as an authenticated `application/xml` request (maximum 5
+MB), parsed server-side, and stored with a random object key. The API response
+contains only the new record ID and type; XML, contractor documents, and object
+keys are not logged or returned. The XML necessarily remains visible in the
+uploading browser's network tools; use HTTPS in deployments to protect it in
+transit. Invoice file download is not yet implemented.
