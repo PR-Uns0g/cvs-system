@@ -1,4 +1,4 @@
-import { db } from "../../../prisma/db";
+import { db } from "../../prisma/db";
 
 export default defineEventHandler(async (event) => {
     const user = await getAuthenticatedUser(event);
