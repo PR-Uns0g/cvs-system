@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+!.env.prod.example
 
 # Node
 node_modules/
@@ -27,11 +28,3 @@ minio_data/
 # Build artifacts
 dist/
 coverage/
-
-# Nuxt
-nuxt-app/node_modules/
-nuxt-app/.nuxt/
-nuxt-app/.output/
-
-# Local secrets
-infra/.env

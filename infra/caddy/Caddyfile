@@ -1,0 +1,7 @@
+{$APP_DOMAIN} {
+	reverse_proxy nuxt-app:3000
+}
+
+{$AUTH_DOMAIN} {
+	reverse_proxy kratos:4433
+}
