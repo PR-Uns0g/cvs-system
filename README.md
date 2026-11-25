@@ -36,6 +36,7 @@ Requirements: Docker Engine and Docker Compose.
 
 ## Documentation
 
+- [Development command reference](./docs/development-commands.md)
 - [Local setup, configuration, and authentication](./docs/setup.md)
 - [Database initialization, access, and Prisma migrations](./docs/database.md)
 

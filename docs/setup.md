@@ -106,8 +106,10 @@ firewall. Keep `infra/.env.prod` private and backed up securely.
 Kratos manages credentials and the browser session. The Nuxt server verifies the session and provisions a representative profile in `app_users` using the Kratos identity UUID. 
 The UUID stays server-side; the session API returns the user's full name and email.
 
-**Persistence caveat:** Compose passes `KRATOS_DSN` to the Kratos service and migration command, while `infra/kratos/kratos.yml` declares `dsn: memory`.
-Kratos must use the intended PostgreSQL DSN and  database, not in-memory storage.
+Compose passes `KRATOS_DSN` to both the Kratos service and its migration
+command. Keep that value pointed at the `kratos` PostgreSQL database so
+identities persist across restarts; the Compose environment overrides the
+`dsn: memory` value in `infra/kratos/kratos.yml`.
 
 The app schema has a role column, but administrator management and complete role-based authorization are still application work. 
 
