@@ -179,32 +179,9 @@ const formatRateOverInvoice = (tax: TaxDetail, nf: number) =>
 </template>
 
 <style scoped>
-.table-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  border: 1px solid transparent;
-  border-radius: 999px;
-  padding: 0.58rem 0.8rem;
-  font-weight: 700;
-}
-
 .table-action:disabled {
   cursor: not-allowed;
   opacity: 0.55;
-}
-
-.table-action--ghost {
-  border-color: rgba(20, 32, 19, 0.1);
-  background: #fff;
-  color: var(--color-text);
-}
-
-.table-action--danger {
-  border-color: rgba(187, 52, 52, 0.14);
-  background: rgba(187, 52, 52, 0.08);
-  color: #ab3030;
 }
 
 .details-row td {

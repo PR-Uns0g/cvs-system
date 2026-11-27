@@ -89,23 +89,6 @@ const isContractorSearchEmpty = computed(
 </template>
 
 <style scoped>
-.table-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  border: 1px solid transparent;
-  border-radius: 999px;
-  padding: 0.58rem 0.8rem;
-  font-weight: 700;
-}
-
-.table-action--danger {
-  border-color: rgba(187, 52, 52, 0.14);
-  background: rgba(187, 52, 52, 0.08);
-  color: #ab3030;
-}
-
 .contractor-card-grid {
   display: grid;
   gap: 1rem;

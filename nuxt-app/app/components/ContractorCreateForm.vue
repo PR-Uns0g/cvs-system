@@ -79,11 +79,6 @@ const onPhoneInput = (event: Event) => {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
 .expand-fade-leave-active {
   overflow: hidden;
   transition:

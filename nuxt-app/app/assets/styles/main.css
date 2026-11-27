@@ -381,6 +381,29 @@ button[disabled] {
   background: rgba(47, 122, 79, 0.04);
 }
 
+.table-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.58rem 0.8rem;
+  font-weight: 700;
+}
+
+.table-action--ghost {
+  border-color: rgba(20, 32, 19, 0.1);
+  background: #fff;
+  color: var(--color-text);
+}
+
+.table-action--danger {
+  border-color: rgba(187, 52, 52, 0.14);
+  background: rgba(187, 52, 52, 0.08);
+  color: #ab3030;
+}
+
 .upload-dropzone {
   display: grid;
   min-height: 16rem;
@@ -414,6 +437,11 @@ button[disabled] {
 .form-grid {
   display: grid;
   gap: 1rem;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .mock-field {

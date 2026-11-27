@@ -132,11 +132,6 @@ const taxFields = [
   gap: 0.25rem;
 }
 
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
 .manual-link {
   display: inline-block;
   margin-top: 0.65rem;

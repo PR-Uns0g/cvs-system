@@ -281,11 +281,6 @@ const submitActiveRecord = () =>
   cursor: pointer;
 }
 
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
 .expand-fade-enter-active,
 .expand-fade-leave-active {
   overflow: hidden;

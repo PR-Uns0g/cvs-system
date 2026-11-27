@@ -242,23 +242,6 @@ const toggleField = (optionId: string) => {
   line-height: 1.5;
 }
 
-.table-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  border: 1px solid transparent;
-  border-radius: 999px;
-  padding: 0.58rem 0.8rem;
-  font-weight: 700;
-}
-
-.table-action--ghost {
-  border-color: rgba(20, 32, 19, 0.1);
-  background: #fff;
-  color: var(--color-text);
-}
-
 @media (max-width: 1024px) {
   .choice-grid,
   .choice-grid--compact {
