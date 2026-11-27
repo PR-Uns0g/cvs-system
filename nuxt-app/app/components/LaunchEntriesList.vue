@@ -53,25 +53,16 @@ const formatRateOverInvoice = (tax: TaxDetail, nf: number) =>
 </script>
 
 <template>
-  <section class="panel-card">
-    <div class="section-toolbar">
-      <div class="section-header">
-        <div>
-          <p class="section-header__eyebrow">Listagem</p>
-          <h2>Todos os lançamentos</h2>
-        </div>
-      </div>
-
-      <div class="table-search">
-        <label class="mock-field">
-          <span>Buscar lançamentos</span>
-          <input v-model="search" class="mock-input" placeholder="Pesquise por contratante, status, data ou XML" />
-        </label>
-        <span class="pill">{{ pending ? "Carregando" : `${filteredEntries.length} registros` }}</span>
-      </div>
-    </div>
-
-    <div class="launch-results">
+  <AppSearchListPanel
+    v-model="search"
+    eyebrow="Listagem"
+    title="Todos os lançamentos"
+    search-label="Buscar lançamentos"
+    placeholder="Pesquise por contratante, status, data ou XML"
+    :count-label="pending ? 'Carregando' : `${filteredEntries.length} registros`"
+    stack-at="820"
+  >
+    <template #results>
       <div v-if="pending" class="empty-state empty-state--loading">
         <i class="pi pi-spin pi-spinner" />
         <div>
@@ -193,31 +184,11 @@ const formatRateOverInvoice = (tax: TaxDetail, nf: number) =>
           <i class="pi pi-angle-right" />
         </button>
       </div>
-    </div>
-  </section>
+    </template>
+  </AppSearchListPanel>
 </template>
 
 <style scoped>
-.section-toolbar {
-  display: grid;
-  gap: 1.25rem;
-}
-
-.table-search {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.launch-results {
-  padding-top: 1em;
-}
-
-.table-search .mock-field {
-  flex: 1;
-}
-
 .table-action {
   display: inline-flex;
   align-items: center;
@@ -347,7 +318,6 @@ const formatRateOverInvoice = (tax: TaxDetail, nf: number) =>
 }
 
 @media (max-width: 820px) {
-  .table-search,
   .table-pagination {
     grid-template-columns: 1fr;
     align-items: stretch;

@@ -23,29 +23,16 @@ const isContractorSearchEmpty = computed(
 </script>
 
 <template>
-  <section class="panel-card">
-    <div class="section-toolbar">
-      <div class="section-header">
-        <div>
-          <p class="section-header__eyebrow">Base ativa</p>
-          <h2>Contratantes cadastrados</h2>
-        </div>
-      </div>
-
-      <div class="table-search">
-        <label class="mock-field">
-          <span>Buscar contratante</span>
-          <input
-            v-model="search"
-            class="mock-input"
-            placeholder="Pesquise por nome, documento, e-mail ou telefone"
-          />
-        </label>
-        <span class="pill">{{ pending ? "Carregando" : `${filteredContractors.length} contratantes` }}</span>
-      </div>
-    </div>
-
-    <div class="contractors-result">
+  <AppSearchListPanel
+    v-model="search"
+    eyebrow="Base ativa"
+    title="Contratantes cadastrados"
+    search-label="Buscar contratante"
+    placeholder="Pesquise por nome, documento, e-mail ou telefone"
+    :count-label="pending ? 'Carregando' : `${filteredContractors.length} contratantes`"
+    stack-at="900"
+  >
+    <template #results>
       <div v-if="!pending && !contractors.length" class="empty-state empty-state--void">
         <i class="pi pi-users" />
         <div>
@@ -99,31 +86,11 @@ const isContractorSearchEmpty = computed(
           </button>
         </article>
       </div>
-    </div>
-  </section>
+    </template>
+  </AppSearchListPanel>
 </template>
 
 <style scoped>
-.section-toolbar {
-  display: grid;
-  gap: 1.25rem;
-}
-
-.table-search {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.contractors-result {
-  padding-top: 1em;
-}
-
-.table-search .mock-field {
-  flex: 1;
-}
-
 .table-action {
   display: inline-flex;
   align-items: center;
@@ -181,11 +148,8 @@ const isContractorSearchEmpty = computed(
 }
 
 @media (max-width: 900px) {
-  .contractor-card-grid,
-  .table-search {
+  .contractor-card-grid {
     grid-template-columns: 1fr;
-    align-items: stretch;
-    flex-direction: column;
   }
 }
 </style>
