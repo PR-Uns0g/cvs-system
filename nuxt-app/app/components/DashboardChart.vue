@@ -30,22 +30,22 @@ const toggleMetric = (metricId: string) => {
       <span class="pill">Dados consolidados</span>
     </div>
 
-    <div v-if="props.pending" class="empty-state empty-state--loading">
-      <i class="pi pi-spin pi-spinner" />
-      <div>
-        <strong>Carregando lançamentos...</strong>
-        <p>Os dados do gráfico estarão disponíveis quando o serviço for reconstruído.</p>
-      </div>
-    </div>
+    <AppEmptyState
+      v-if="props.pending"
+      variant="loading"
+      icon="pi pi-spin pi-spinner"
+      title="Carregando lançamentos..."
+      description="Os dados do gráfico estarão disponíveis quando o serviço for reconstruído."
+    />
 
-    <div v-else-if="!props.launchCount" class="empty-state empty-state--void">
-      <i class="pi pi-chart-bar" />
-      <div>
-        <strong>Nenhum dado para o gráfico ainda.</strong>
-        <p>Os dados deste painel não estão conectados a uma fonte de dados.</p>
-        <NuxtLink to="/lancamentos" class="empty-state__link">Ir para lançamentos</NuxtLink>
-      </div>
-    </div>
+    <AppEmptyState
+      v-else-if="!props.launchCount"
+      variant="void"
+      icon="pi pi-chart-bar"
+      title="Nenhum dado para o gráfico ainda."
+      description="Os dados deste painel não estão conectados a uma fonte de dados."
+      :link="{ to: '/lancamentos', label: 'Ir para lançamentos' }"
+    />
 
     <template v-else>
       <div class="metric-selector" role="group" aria-label="Métricas do gráfico">
@@ -100,12 +100,4 @@ const toggleMetric = (metricId: string) => {
   border-radius: 999px;
 }
 
-.empty-state__link {
-  display: inline-block;
-  margin-top: 0.65rem;
-  font-weight: 700;
-  color: var(--color-brand-strong);
-  text-decoration: underline;
-  text-underline-offset: 0.18em;
-}
 </style>

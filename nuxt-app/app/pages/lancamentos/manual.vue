@@ -45,13 +45,12 @@ const taxFields = [
       </NuxtLink>
     </template>
 
-    <section class="panel-card empty-state empty-state--panel">
-      <i class="pi pi-users" />
-      <div>
-        <strong>Prévia visual do cadastro manual.</strong>
-        <p>O formulário não está conectado a dados e não salva alterações.</p>
-      </div>
-    </section>
+    <AppEmptyState
+      panel
+      icon="pi pi-users"
+      title="Prévia visual do cadastro manual."
+      description="O formulário não está conectado a dados e não salva alterações."
+    />
 
     <form class="panel-card manual-form" @submit.prevent>
       <div class="manual-form__grid">
@@ -145,11 +144,6 @@ const taxFields = [
   color: var(--color-brand-strong);
   text-decoration: underline;
   text-underline-offset: 0.18em;
-}
-
-.empty-state--panel {
-  border: 1px dashed rgba(20, 32, 19, 0.12);
-  background: rgba(247, 250, 247, 0.65);
 }
 
 @media (max-width: 820px) {

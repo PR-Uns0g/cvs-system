@@ -102,26 +102,20 @@ const launchCount = computed(() => recentEntries.value.length);
         >
       </div>
 
-      <div v-if="isDashboardPending" class="empty-state empty-state--loading">
-        <i class="pi pi-spin pi-spinner" />
-        <div>
-          <strong>Carregando lançamentos recentes...</strong>
-        </div>
-      </div>
-
-      <div
+      <AppEmptyState
+        v-if="isDashboardPending"
+        variant="loading"
+        icon="pi pi-spin pi-spinner"
+        title="Carregando lançamentos recentes..."
+      />
+      <AppEmptyState
         v-else-if="!recentEntries.length"
-        class="empty-state empty-state--void"
-      >
-        <i class="pi pi-inbox" />
-        <div>
-          <strong>Nenhum lançamento ainda.</strong>
-          <p>Os lançamentos recentes aparecerão aqui após a reconexão do serviço.</p>
-          <NuxtLink to="/lancamentos" class="empty-state__link"
-            >Importar XML em Lançamentos</NuxtLink
-          >
-        </div>
-      </div>
+        variant="void"
+        icon="pi pi-inbox"
+        title="Nenhum lançamento ainda."
+        description="Os lançamentos recentes aparecerão aqui após a reconexão do serviço."
+        :link="{ to: '/lancamentos', label: 'Importar XML em Lançamentos' }"
+      />
 
       <div v-else class="table-wrap">
         <table class="app-data-table">

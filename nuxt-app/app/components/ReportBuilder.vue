@@ -69,17 +69,14 @@ const toggleField = (optionId: string) => {
           </button>
         </div>
 
-        <div v-if="!hasContractors" class="empty-state empty-state--report">
-          <i class="pi pi-file-export" />
-          <div>
-            <strong>Nenhum contratante para incluir no relatório.</strong>
-            <p>
-              As opções de contratantes e exportação estarão disponíveis quando o serviço
-              for reconstruído.
-            </p>
-            <NuxtLink to="/contratantes" class="empty-state__link">Ir para contratantes</NuxtLink>
-          </div>
-        </div>
+        <AppEmptyState
+          v-if="!hasContractors"
+          variant="report"
+          icon="pi pi-file-export"
+          title="Nenhum contratante para incluir no relatório."
+          description="As opções de contratantes e exportação estarão disponíveis quando o serviço for reconstruído."
+          :link="{ to: '/contratantes', label: 'Ir para contratantes' }"
+        />
 
         <div v-else class="choice-grid">
           <label
@@ -260,15 +257,6 @@ const toggleField = (optionId: string) => {
   border-color: rgba(20, 32, 19, 0.1);
   background: #fff;
   color: var(--color-text);
-}
-
-.empty-state__link {
-  display: inline-block;
-  margin-top: 0.65rem;
-  font-weight: 700;
-  color: var(--color-brand-strong);
-  text-decoration: underline;
-  text-underline-offset: 0.18em;
 }
 
 @media (max-width: 1024px) {

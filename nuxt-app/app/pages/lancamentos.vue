@@ -46,15 +46,13 @@ const toggleRecordForm = () => {
     </section>
 
     <section v-if="!pending && !entries.length" class="panel-card launch-empty-hero">
-      <div class="empty-state empty-state--void empty-state--stacked">
-        <i class="pi pi-receipt" />
-        <div>
-          <strong>Os lançamentos não estão conectados a uma fonte de dados.</strong>
-          <p>
-            Os envios são encaminhados à API, mas ainda não são persistidos.
-          </p>
-        </div>
-      </div>
+      <AppEmptyState
+        variant="void"
+        stacked
+        icon="pi pi-receipt"
+        title="Os lançamentos não estão conectados a uma fonte de dados."
+        description="Os envios são encaminhados à API, mas ainda não são persistidos."
+      />
     </section>
 
     <section v-else class="panel-grid panel-grid--stats launch-stats">

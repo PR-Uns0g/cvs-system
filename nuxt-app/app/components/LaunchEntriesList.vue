@@ -63,34 +63,24 @@ const formatRateOverInvoice = (tax: TaxDetail, nf: number) =>
     stack-at="820"
   >
     <template #results>
-      <div v-if="pending" class="empty-state empty-state--loading">
-        <i class="pi pi-spin pi-spinner" />
-        <div>
-          <strong>Carregando lançamentos...</strong>
-        </div>
-      </div>
-  
-      <div
+      <AppEmptyState
+        v-if="pending"
+        variant="loading"
+        icon="pi pi-spin pi-spinner"
+        title="Carregando lançamentos..."
+      />
+      <AppEmptyState
         v-else-if="!filteredEntries.length"
-        :class="['empty-state', isSearchEmpty ? 'empty-state--search' : 'empty-state--void']"
-      >
-        <i class="pi pi-receipt" />
-        <div>
-          <strong>{{
-            isSearchEmpty
-              ? "Nenhum resultado para a busca."
-              : "Nenhum lançamento encontrado."
-          }}</strong>
-          <p>
-            {{
-              isSearchEmpty
-                ? "Limpe o filtro ou tente outro termo."
-                : "Envie um XML para criar o primeiro lançamento."
-            }}
-          </p>
-        </div>
-      </div>
-  
+        :variant="isSearchEmpty ? 'search' : 'void'"
+        icon="pi pi-receipt"
+        :title="isSearchEmpty ? 'Nenhum resultado para a busca.' : 'Nenhum lançamento encontrado.'"
+        :description="
+          isSearchEmpty
+            ? 'Limpe o filtro ou tente outro termo.'
+            : 'Envie um XML para criar o primeiro lançamento.'
+        "
+      />
+
       <div v-else class="table-wrap">
         <table class="app-data-table">
           <thead>

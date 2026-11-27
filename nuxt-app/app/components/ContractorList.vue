@@ -33,29 +33,27 @@ const isContractorSearchEmpty = computed(
     stack-at="900"
   >
     <template #results>
-      <div v-if="!pending && !contractors.length" class="empty-state empty-state--void">
-        <i class="pi pi-users" />
-        <div>
-          <strong>Os contratantes não estão conectados a uma fonte de dados.</strong>
-          <p>O cadastro e a consulta serão habilitados quando o serviço for reconstruído.</p>
-        </div>
-      </div>
-  
-      <div v-else-if="pending" class="empty-state empty-state--loading">
-        <i class="pi pi-spin pi-spinner" />
-        <div>
-          <strong>Carregando contratantes...</strong>
-        </div>
-      </div>
-  
-      <div v-else-if="isContractorSearchEmpty" class="empty-state empty-state--search">
-        <i class="pi pi-search" />
-        <div>
-          <strong>Nenhum resultado para a busca.</strong>
-          <p>Limpe o filtro ou tente outro termo.</p>
-        </div>
-      </div>
-  
+      <AppEmptyState
+        v-if="!pending && !contractors.length"
+        variant="void"
+        icon="pi pi-users"
+        title="Os contratantes não estão conectados a uma fonte de dados."
+        description="O cadastro e a consulta serão habilitados quando o serviço for reconstruído."
+      />
+      <AppEmptyState
+        v-else-if="pending"
+        variant="loading"
+        icon="pi pi-spin pi-spinner"
+        title="Carregando contratantes..."
+      />
+      <AppEmptyState
+        v-else-if="isContractorSearchEmpty"
+        variant="search"
+        icon="pi pi-search"
+        title="Nenhum resultado para a busca."
+        description="Limpe o filtro ou tente outro termo."
+      />
+
       <div v-else class="contractor-card-grid">
         <article
           v-for="contractor in filteredContractors"
