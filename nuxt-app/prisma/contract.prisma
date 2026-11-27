@@ -82,4 +82,6 @@ model InvoiceMetadata {
   extra             Json?
 
   record            FinancialRecord                  @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  
+  @@map("invoice_metadata")
 }
