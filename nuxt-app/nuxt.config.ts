@@ -8,6 +8,7 @@ export default defineNuxtConfig({
   modules: ["@primevue/nuxt-module"],
   runtimeConfig: {
     kratosInternalUrl: "http://kratos:4433",
+    fileEncryptionKey: "",
     s3: {
       endpoint: "",
       bucket: "",
@@ -33,7 +34,7 @@ export default defineNuxtConfig({
       meta: [
         {
           name: "description",
-          content: "Frontend do sistema de gestão financeira e notas fiscais.",
+          content: "Sistema de gestão financeira e notas fiscais para representantes.",
         },
       ],
       link: [{ rel: "icon", type: "image/x-icon", href: "/favicon.ico" }],

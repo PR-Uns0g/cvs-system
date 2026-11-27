@@ -6,6 +6,7 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import { db } from "../../prisma/db";
+import { encrypt } from "../utils/invoice-encryption";
 import { extractNfseData, NfseExtractionError } from "../utils/nfse";
 
 const MAX_INVOICE_XML_BYTES = 5_000_000;
@@ -140,6 +141,32 @@ async function createInvoiceRecord(
       message: "Invoice storage is not configured.",
     });
   }
+  if (!/^[\da-f]{64}$/i.test(config.fileEncryptionKey)) {
+    throw createError({
+      status: 503,
+      statusText: "Service Unavailable",
+      message: "Invoice encryption is not configured correctly.",
+    });
+  }
+
+  const sourceFileKey = `invoices/${randomUUID()}.enc`;
+  let uploaded = false;
+  let encryptedXml: Buffer;
+
+  try {
+    encryptedXml = encrypt(
+      Buffer.from(xml, "utf8"),
+      config.fileEncryptionKey,
+      sourceFileKey,
+    );
+  } catch (error) {
+    console.error("Invoice XML encryption failed.", safeErrorName(error));
+    throw createError({
+      status: 500,
+      statusText: "Internal Server Error",
+      message: "The invoice file could not be encrypted.",
+    });
+  }
 
   const storage = new S3Client({
     endpoint: config.s3.endpoint,
@@ -150,16 +177,14 @@ async function createInvoiceRecord(
       secretAccessKey: config.s3.secretKey,
     },
   });
-  const sourceFileKey = `invoices/${randomUUID()}.xml`;
-  let uploaded = false;
 
   try {
     await storage.send(
       new PutObjectCommand({
         Bucket: config.s3.bucket,
         Key: sourceFileKey,
-        Body: Buffer.from(xml, "utf8"),
-        ContentType: "application/xml",
+        Body: encryptedXml,
+        ContentType: "application/octet-stream",
       }),
     );
     uploaded = true;
